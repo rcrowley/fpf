@@ -29,7 +29,7 @@ An FPF package is a `tar`(5) archive of a bare Git repository.  The repository `
 
 Package metadata is stored via `git-config`(1) in the `fpf` section.  The following metadata are allowed:
 
-* `fpf.arch`: pointer size (32 or 64) of target systems.  If not present, the package targets all systems.
+* `fpf.arch`: target architecture (`amd64`, `x86_64`, `i386`, etc.).  If not present, the package targets all systems.
 * `fpf.name`: package name.
 * `fpf.version`: package version number.  See <http://semver.org>.
 

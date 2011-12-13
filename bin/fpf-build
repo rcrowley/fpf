@@ -10,10 +10,7 @@
 
 set -e
 
-case "$(dpkg --print-architecture 2>"/dev/null" || rpm --eval "%_arch")" in
-	"amd64"|"x86_64") ARCH="64";;
-	*) ARCH="32";;
-esac
+ARCH="$({ dpkg --print-architecture || rpm --eval "%_arch"; } 2>"/dev/null")"
 
 usage() {
 	grep "^#/" "$0" | cut -c4- 1>&2
@@ -56,7 +53,6 @@ rm -rf \
 # TODO User-specified $TMP/work.git/description.
 export GIT_DIR="$TMP/work.git"
 [ -z "$ARCH" ] || git config --add "fpf.arch" "$ARCH"
-echo "ARCH: $ARCH"
 git config --add "fpf.name" "$NAME"
 git config --add "fpf.version" "$VERSION"
 
