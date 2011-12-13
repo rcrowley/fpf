@@ -6,7 +6,7 @@
 
 set -e
 
-PREFIX="/home/rcrowley/work/fpf/rootfs"
+PREFIX="$(dirname "$(dirname "$0")")"
 
 usage() {
 	grep "^#/" "$0" | cut -c4- 1>&2
@@ -58,11 +58,9 @@ _git_checkout_tree "$TREE" "$GIT_WORK_TREE"
 
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type d -printf '%P\n' |
 while read PATHNAME
-do
-	mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" "$PREFIX/$PATHNAME"
+do mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" "$PREFIX/$PATHNAME"
 done
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
 while read PATHNAME
-do
-	ln "$LIB/$NAME/$PATHNAME" "$PREFIX/$PATHNAME"
+do ln "$LIB/$NAME/$PATHNAME" "$PREFIX/$PATHNAME"
 done
