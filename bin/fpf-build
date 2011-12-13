@@ -49,7 +49,8 @@ rm -rf \
 	"$TMP/work.git/info" \
 	"$TMP/work.git/logs" \
 	"$TMP/work.git/objects/info" \
-	"$TMP/work.git/objects/pack"
+	"$TMP/work.git/objects/pack" \
+	"$TMP/work.git/refs/tags"
 # TODO User-specified $TMP/work.git/description.
 export GIT_DIR="$TMP/work.git"
 [ -z "$ARCH" ] || git config --add "fpf.arch" "$ARCH"
