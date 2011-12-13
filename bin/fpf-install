@@ -64,3 +64,8 @@ find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
 while read PATHNAME
 do ln "$LIB/$NAME/$PATHNAME" "$PREFIX/$PATHNAME"
 done
+
+git reset >"/dev/null"
+git update-index --refresh
+
+$(dirname "$0")/fpf-check --prefix="$PREFIX" "$NAME" >"/dev/null"
