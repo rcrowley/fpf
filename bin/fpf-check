@@ -1,1 +1,57 @@
 #!/bin/sh
+
+#/ Usage: fpf-check [--prefix=<prefix>] <name>
+#/   --prefix=<prefix> installation prefix
+#/   <name>            package name
+
+set -e
+
+PREFIX="$(dirname "$(dirname "$0")")"
+
+usage() {
+	grep "^#/" "$0" | cut -c4- 1>&2
+	exit "$1"
+}
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		--prefix) PREFIX="$2" shift 2;;
+		--prefix=*) PREFIX="$(echo "$1" | cut -c10-)" shift;;
+		-h|--help) usage 0;;
+		-*) usage 1;;
+		*) break;;
+	esac
+done
+NAME="$1"
+[ -z "$PREFIX" -o -z "$NAME" ] && usage 1
+
+LIB="$PREFIX/lib/fpf"
+[ ! -d "$LIB/$NAME" ] && echo "fpf: $NAME is not installed" >&2 && exit 1
+
+TMP="$(mktemp)"
+trap "rm -f \"$TMP\"" EXIT INT TERM
+
+export GIT_DIR="$LIB/$NAME/.git"
+export GIT_WORK_TREE="$LIB/$NAME"
+
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
+COMMIT="$(git rev-parse "HEAD")"
+TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
+_git_ls_tree "$TREE" "" >>"$TMP"
+
+find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
+while read PATHNAME
+do
+	L_INO="$(stat -c"%i" "$LIB/$NAME/$PATHNAME" 2>"/dev/null" || true)"
+	P_INO="$(stat -c"%i" "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"
+	if [ -n "$L_INO" -a -n "$P_INO" -a "$L_INO" != "$P_INO" ]
+	then
+		echo "fpf: $PREFIX/$PATHNAME inode is $P_INO, should be $L_INO" >&2
+		echo 1
+	fi
+done >>"$TMP"
+
+git diff-files --color --exit-code --stat
+
+[ "$(stat -c"%s" "$TMP")" = 0 ] || exit 1
