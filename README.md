@@ -25,7 +25,7 @@ Much to my dismay, many open-source communities promote isolating their dependen
 Design
 ------
 
-An FPF package is a `tar`(5) archive of a bare Git repository.  The repository `HEAD` points to a default branched named the same as the package itself.  That branch contains one commit, made by the package maintainer.  That commit's tree contains all the files in the package, relative to the installation prefix, which is unknown to the package maintainer.
+An FPF package is a `tar`(5) archive of a bare Git repository.  The repository `HEAD` points to a default branch named the same as the package itself.  That branch contains one commit, made by the package maintainer.  That commit's tree contains all the files in the package, relative to the installation prefix, which is unknown to the package maintainer.
 
 Package metadata is stored via `git-config`(1) in the `fpf` section.  The following metadata are allowed:
 
@@ -46,7 +46,7 @@ Package installation is a two step process:
 1. Create a working copy of the Git repository.
 2. Hard link files from the working copy into place within the installation prefix.
 
-Having a working copy provides another two step process for checking the integrigy of an installed package:
+Having a working copy provides another two step process for checking the integrity of an installed package:
 
 1. Verify the access mode of all files and directories and the link count of all regular files.
 2. Verify that the working copy matches the package's Git commit.
