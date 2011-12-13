@@ -1,0 +1,114 @@
+#!/bin/sh
+
+#/ Usage: fpf-build -d<dirname> -n<name> -v<version> <package>
+#/   -d<dirname> directory with files to be packaged
+#/   -n<name>    package name
+#/   -v<version> package version number
+#/   <package>   package pathname
+
+set -ex
+
+usage() {
+	grep "^#/" "$0" | cut -c4- 1>&2
+	exit "$1"
+}
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		-d|--dirname)
+			DIRNAME="$2"
+			shift 2;;
+		-d*)
+			DIRNAME="$(echo $1 | cut -c3-)"
+			shift;;
+		--dirname=*)
+			DIRNAME="$(echo $1 | cut -c11-)"
+			shift;;
+		-n|--name)
+			NAME="$2"
+			shift 2;;
+		-n*)
+			NAME="$(echo $1 | cut -c3-)"
+			shift;;
+		--name=*)
+			NAME="$(echo $1 | cut -c8-)"
+			shift;;
+		-v|--version)
+			VERSION="$2"
+			shift 2;;
+		-v*)
+			VERSION="$(echo $1 | cut -c3-)"
+			shift;;
+		--version=*)
+			VERSION="$(echo $1 | cut -c11-)"
+			shift;;
+		-h|--help) usage 0;;
+		-*) usage 1;;
+		*) break;;
+	esac
+done
+PACKAGE="$1"
+[ -z "$DIRNAME" -o -z "$NAME" -o -z "$VERSION" -o -z "$PACKAGE" ] && usage 1
+
+TMP="$(mktemp -d)"
+trap "rm -rf \"$TMP\"" EXIT INT TERM
+git init --bare -q "$TMP/work.git"
+rm -rf \
+	"$TMP/work.git/branches" \
+	"$TMP/work.git/hooks" \
+	"$TMP/work.git/info" \
+	"$TMP/work.git/logs" \
+	"$TMP/work.git/objects/info" \
+	"$TMP/work.git/objects/pack"
+# TODO User-specified $TMP/work.git/description.
+export GIT_DIR="$TMP/work.git"
+git config --add "fpf.arch" "$(
+	dpkg --print-architecture 2>/dev/null || rpm --eval "%_arch" 2>/dev/null
+)"
+git config --add "fpf.name" "$NAME"
+git config --add "fpf.version" "$VERSION"
+
+_git_commit() {
+	TS="$(date -u +%s)"
+	git hash-object --no-filters --stdin -t"commit" -w <<EOF
+tree $1
+author $(git config "user.name") <$(git config "user.email")> $TS +0000
+committer $(git config "user.name") <$(git config "user.email")> $TS +0000
+
+EOF
+}
+
+_git_write_tree() {
+	{
+		find "$1" -maxdepth 1 -mindepth 1 -type d -printf '%P\n' |
+		while read D
+		do
+			/bin/echo -en "04$(_stat "$1/$D") $D\\0$(
+				_git_write_tree "$1/$D" | sed -r 's/../\\x&/g'
+			)"
+		done
+		find "$1" -maxdepth 1 -mindepth 1 -type f -printf '%P\n' |
+		while read F
+		do
+			/bin/echo -en "10$(_stat "$1/$F") $F\\0$(
+				git hash-object --no-filters -t"blob" -w "$1/$F" |
+				sed -r 's/../\\x&/g'
+			)"
+		done
+	} | git hash-object --no-filters --stdin -t"tree" -w
+}
+
+_stat() {
+	MODE="$(stat -c"%a" "$1")"
+	if [ "${#MODE}" = 3 ]
+	then echo "0$MODE"
+	else echo "$MODE"
+	fi
+}
+
+TREE="$(_git_write_tree "$DIRNAME")"
+COMMIT="$(_git_commit "$TREE")"
+git update-ref "refs/heads/$NAME" "$COMMIT"
+git symbolic-ref "HEAD" "refs/heads/$NAME"
+
+tar cf "$PACKAGE" -C "$TMP/work.git" "."

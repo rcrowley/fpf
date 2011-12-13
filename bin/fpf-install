@@ -1,0 +1,91 @@
+#!/bin/sh
+
+#/ Usage: fpf-install [--prefix=<prefix>] <package>
+#/   --prefix=<prefix> installation prefix
+#/   <package>         package pathname
+
+set -ex
+
+PREFIX="/home/rcrowley/work/fpf/rootfs"
+
+usage() {
+	grep "^#/" "$0" | cut -c4- 1>&2
+	exit "$1"
+}
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		--prefix)
+			PREFIX="$2"
+			shift 2;;
+		--prefix=*)
+			PREFIX="$(echo "$1" | cut -c10-)"
+			shift;;
+		-h|--help) usage 0;;
+		-*) usage 1;;
+		*) break;;
+	esac
+done
+PACKAGE="$1"
+[ -z "$PREFIX" -o -z "$PACKAGE" ] && usage 1
+
+TMP="$(mktemp -d)"
+trap "rm -rf \"$TMP\"" EXIT INT TERM
+
+mkdir "$TMP/work.git"
+tar xf "$PACKAGE" -C "$TMP/work.git"
+export GIT_DIR="$TMP/work.git"
+NAME="$(git config "fpf.name")"
+[ -z "$NAME" ] && echo "fpf: $PACKAGE has no name" >&2 && exit 1
+VERSION="$(git config "fpf.version")"
+[ -z "$VERSION" ] && echo "fpf: $PACKAGE has no version" >&2 && exit 1
+
+LIB="$PREFIX/lib/fpf"
+mkdir -p "$LIB"
+if [ -d "$LIB/$NAME" ]
+then
+	INST_VERSION="$(git --git-dir "$LIB/$NAME/.git" config "fpf.version")"
+	echo "fpf: $NAME $INST_VERSION already installed" >&2 && exit 1
+else
+	mkdir "$LIB/$NAME"
+	cp -R "$TMP/work.git" "$LIB/$NAME/.git"
+	export GIT_DIR="$LIB/$NAME/.git"
+	export GIT_WORK_TREE="$LIB/$NAME"
+	git config --bool "core.bare" "false"
+fi
+
+_git_checkout() {
+	COMMIT="$(git rev-parse "$1")"
+	TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
+	_git_checkout_tree "$TREE" "$GIT_WORK_TREE"
+}
+
+_git_checkout_tree() {
+	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
+	do
+		MODE="$(echo -n "$MODE" | tail -c4)"
+		echo "MODE: $MODE, TYPE: $TYPE, SHA: $SHA, FILENAME: $FILENAME"
+		case "$TYPE" in
+			"blob")
+				git cat-file "blob" "$SHA" >"$2/$FILENAME"
+				chmod "$MODE" "$2/$FILENAME";;
+			"tree")
+				mkdir -m"$MODE" "$2/$FILENAME"
+				_git_checkout_tree "$SHA" "$2/$FILENAME";;
+			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
+		esac
+	done
+}
+
+_git_checkout "HEAD"
+
+find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type d -printf '%P\n' |
+while read PATHNAME
+do
+	mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" "$PREFIX/$PATHNAME"
+done
+find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
+while read PATHNAME
+do
+	ln "$LIB/$NAME/$PATHNAME" "$PREFIX/$PATHNAME"
+done
