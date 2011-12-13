@@ -1,12 +1,19 @@
 #!/bin/sh
 
-#/ Usage: fpf-build -d<dirname> -n<name> -v<version> <package>
+#/ Usage: fpf-build [-A|-a<arch>] -d<dirname> -n<name> -v<version> <package>
+#/   -A          package is architecture-independent
+#/   -a<arch>    pointer size (32 or 64) on target systems
 #/   -d<dirname> directory with files to be packaged
 #/   -n<name>    package name
 #/   -v<version> package version number
 #/   <package>   package pathname
 
-set -ex
+set -e
+
+case "$(dpkg --print-architecture 2>"/dev/null" || rpm --eval "%_arch")" in
+	"amd64"|"x86_64") ARCH="64";;
+	*) ARCH="32";;
+esac
 
 usage() {
 	grep "^#/" "$0" | cut -c4- 1>&2
@@ -15,33 +22,19 @@ usage() {
 while [ "$#" -gt 0 ]
 do
 	case "$1" in
-		-d|--dirname)
-			DIRNAME="$2"
-			shift 2;;
-		-d*)
-			DIRNAME="$(echo $1 | cut -c3-)"
-			shift;;
-		--dirname=*)
-			DIRNAME="$(echo $1 | cut -c11-)"
-			shift;;
-		-n|--name)
-			NAME="$2"
-			shift 2;;
-		-n*)
-			NAME="$(echo $1 | cut -c3-)"
-			shift;;
-		--name=*)
-			NAME="$(echo $1 | cut -c8-)"
-			shift;;
-		-v|--version)
-			VERSION="$2"
-			shift 2;;
-		-v*)
-			VERSION="$(echo $1 | cut -c3-)"
-			shift;;
-		--version=*)
-			VERSION="$(echo $1 | cut -c11-)"
-			shift;;
+		-A) ARCH="" shift;;
+		-a|--arch) ARCH="$2" shift 2;;
+		-a*) ARCH="$(echo $1 | cut -c3-)" shift;;
+		--arch=*) ARCH="$(echo $1 | cut -c8-)" shift;;
+		-d|--dirname) DIRNAME="$2" shift 2;;
+		-d*) DIRNAME="$(echo $1 | cut -c3-)" shift;;
+		--dirname=*) DIRNAME="$(echo $1 | cut -c11-)" shift;;
+		-n|--name) NAME="$2" shift 2;;
+		-n*) NAME="$(echo $1 | cut -c3-)" shift;;
+		--name=*) NAME="$(echo $1 | cut -c8-)" shift;;
+		-v|--version) VERSION="$2" shift 2;;
+		-v*) VERSION="$(echo $1 | cut -c3-)" shift;;
+		--version=*) VERSION="$(echo $1 | cut -c11-)" shift;;
 		-h|--help) usage 0;;
 		-*) usage 1;;
 		*) break;;
@@ -62,9 +55,8 @@ rm -rf \
 	"$TMP/work.git/objects/pack"
 # TODO User-specified $TMP/work.git/description.
 export GIT_DIR="$TMP/work.git"
-git config --add "fpf.arch" "$(
-	dpkg --print-architecture 2>/dev/null || rpm --eval "%_arch" 2>/dev/null
-)"
+[ -z "$ARCH" ] || git config --add "fpf.arch" "$ARCH"
+echo "ARCH: $ARCH"
 git config --add "fpf.name" "$NAME"
 git config --add "fpf.version" "$VERSION"
 
