@@ -20,7 +20,7 @@ Configuration files are likewise the responsibility of the configuration managem
 
 This is 2011 and we all use version control software.  Honestly, we basically all use Git.  Therefore: **no source packages**.
 
-Much to my dismay, many open-source communities promote isolating their dependencies from the rest of the system (for the curious: I prefer faking entire systems with [`lxc`](http://lxc.sourceforge.net/) and [`debootstrap`](http://wiki.debian.org/Debootstrap)) and particularly installing packages as normal users.  A widely-useful package format should support this.  Therefore: **remain prefix agnostic** and **don't require `root` privileges**.
+Much to my dismay, many open-source communities promote isolating their dependencies from the rest of the system (for the curious: I prefer faking entire systems with [`lxc`](http://lxc.sourceforge.net/) and [`debootstrap`](http://wiki.debian.org/Debootstrap)) and particularly installing packages as normal users.  A widely-useful package format should support these practices.  Therefore: **remain prefix agnostic** and **don't require `root` privileges**.
 
 Design
 ------
