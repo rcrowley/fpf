@@ -42,38 +42,19 @@ if [ -d "$LIB/$NAME" ]
 then
 	INST_VERSION="$(git --git-dir "$LIB/$NAME/.git" config "fpf.version")"
 	echo "fpf: $NAME $INST_VERSION already installed" >&2 && exit 1
-else
-	mkdir "$LIB/$NAME"
-	cp -R "$TMP/work.git" "$LIB/$NAME/.git"
-	export GIT_DIR="$LIB/$NAME/.git"
-	export GIT_WORK_TREE="$LIB/$NAME"
-	git config --bool "core.bare" "false"
 fi
 
-_git_checkout() {
-	COMMIT="$(git rev-parse "$1")"
-	TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-	_git_checkout_tree "$TREE" "$GIT_WORK_TREE"
-}
+mkdir "$LIB/$NAME"
+cp -R "$TMP/work.git" "$LIB/$NAME/.git"
+export GIT_DIR="$LIB/$NAME/.git"
+export GIT_WORK_TREE="$LIB/$NAME"
+git config --bool "core.bare" "false"
 
-_git_checkout_tree() {
-	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
-	do
-		MODE="$(echo -n "$MODE" | tail -c4)"
-		echo "MODE: $MODE, TYPE: $TYPE, SHA: $SHA, FILENAME: $FILENAME"
-		case "$TYPE" in
-			"blob")
-				git cat-file "blob" "$SHA" >"$2/$FILENAME"
-				chmod "$MODE" "$2/$FILENAME";;
-			"tree")
-				mkdir -m"$MODE" "$2/$FILENAME"
-				_git_checkout_tree "$SHA" "$2/$FILENAME";;
-			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
-		esac
-	done
-}
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
-_git_checkout "HEAD"
+COMMIT="$(git rev-parse "HEAD")"
+TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
+_git_checkout_tree "$TREE" "$GIT_WORK_TREE"
 
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type d -printf '%P\n' |
 while read PATHNAME

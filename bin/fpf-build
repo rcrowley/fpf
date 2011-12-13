@@ -57,43 +57,7 @@ export GIT_DIR="$TMP/work.git"
 git config --add "fpf.name" "$NAME"
 git config --add "fpf.version" "$VERSION"
 
-_git_commit() {
-	TS="$(date -u +%s)"
-	git hash-object --no-filters --stdin -t"commit" -w <<EOF
-tree $1
-author $(git config "user.name") <$(git config "user.email")> $TS +0000
-committer $(git config "user.name") <$(git config "user.email")> $TS +0000
-
-EOF
-}
-
-_git_write_tree() {
-	{
-		find "$1" -maxdepth 1 -mindepth 1 -type d -printf '%P\n' |
-		while read D
-		do
-			/bin/echo -en "04$(_stat "$1/$D") $D\\0$(
-				_git_write_tree "$1/$D" | sed -r 's/../\\x&/g'
-			)"
-		done
-		find "$1" -maxdepth 1 -mindepth 1 -type f -printf '%P\n' |
-		while read F
-		do
-			/bin/echo -en "10$(_stat "$1/$F") $F\\0$(
-				git hash-object --no-filters -t"blob" -w "$1/$F" |
-				sed -r 's/../\\x&/g'
-			)"
-		done
-	} | git hash-object --no-filters --stdin -t"tree" -w
-}
-
-_stat() {
-	MODE="$(stat -c"%a" "$1")"
-	if [ "${#MODE}" = 3 ]
-	then echo "0$MODE"
-	else echo "$MODE"
-	fi
-}
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
 TREE="$(_git_write_tree "$DIRNAME")"
 COMMIT="$(_git_commit "$TREE")"
