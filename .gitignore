@@ -1,3 +1,4 @@
+*.fpf
+*.swp
 rootfs
 test
-*.fpf
