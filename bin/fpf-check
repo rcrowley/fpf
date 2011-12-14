@@ -26,6 +26,10 @@ done
 NAME="$1"
 [ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
+# It's critical that the prefix be fully-qualified or Git will lose track
+# of itself by changing its working directory.
+PREFIX="$(cd "$PREFIX" && pwd)"
+
 # Perform a quick sanity check: make sure the package is installed.
 LIB="$PREFIX/lib/fpf"
 [ ! -d "$LIB/$NAME" ] && echo "fpf: $NAME is not installed" >&2 && exit 1

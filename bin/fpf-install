@@ -26,6 +26,10 @@ done
 PACKAGE="$1"
 [ -z "$PREFIX" -o -z "$PACKAGE" ] && usage 1
 
+# It's critical that the prefix be fully-qualified or Git will lose track
+# of itself by changing its working directory.
+PREFIX="$(cd "$PREFIX" && pwd)"
+
 # Extract the package and its metadata into a temporary directory, which
 # will all be cleaned up at exit.  Export `GIT_DIR` for subsequent `git`(1)
 # commands.
