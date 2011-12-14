@@ -1,1 +1,58 @@
 #!/bin/sh
+
+#/ Usage: fpf-remove [--prefix=<prefix>] <name>
+#/   --prefix=<prefix> installation prefix
+#/   <name>            package name
+
+set -e
+
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
+# The default prefix is the one in which the FPF tools are installed.
+PREFIX="$(dirname "$(dirname "$0")")"
+
+usage() {
+	grep "^#/" "$0" | cut -c4- 1>&2
+	exit "$1"
+}
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		--prefix) PREFIX="$2" shift 2;;
+		--prefix=*) PREFIX="$(echo "$1" | cut -c10-)" shift;;
+		-h|--help) usage 0;;
+		-*) usage 1;;
+		*) break;;
+	esac
+done
+NAME="$1"
+[ -z "$PREFIX" -o -z "$NAME" ] && usage 1
+
+# It's critical that the prefix be fully-qualified or Git will lose track
+# of itself by changing its working directory.
+PREFIX="$(cd "$PREFIX" && pwd)"
+
+# Verify the installation's integrity, lest we remove modifications the
+# user cares about.
+$(dirname "$0")/fpf-check --prefix="$PREFIX" "$NAME"
+
+# Export `GIT_DIR` and `GIT_WORK_TREE` for subsequent `git`(1) commands.
+LIB="$PREFIX/lib/fpf"
+export GIT_DIR="$LIB/$NAME.git"
+export GIT_WORK_TREE="$PREFIX"
+
+# Remove every file and directory installed by this package.  Don't worry
+# about directories that are not empty - these things happen when multiple
+# packages are placed on the same installation prefix.
+COMMIT="$(git rev-parse "HEAD")"
+TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
+_git_ls "$TREE" | tac | while read MODE TYPE SHA PATHNAME
+do
+	case "$TYPE" in
+		"blob") rm -f "$PREFIX/$PATHNAME";;
+		"tree") rmdir --ignore-fail-on-non-empty "$PREFIX/$PATHNAME";;
+	esac
+done
+
+# Remove the package itself from the library directory.
+rm -rf "$PREFIX/lib/fpf/$NAME.git"
