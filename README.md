@@ -39,7 +39,28 @@ Package metadata is stored via `git-config`(1) in the `fpf` section.  The follow
 * `fpf.name`: package name.
 * `fpf.version`: package version number.  See <http://semver.org>.
 
-*Dependency metadata is still under consideration.*
+Dependency metadata is likewise stored via `git-config`(1) in the `fpf` section.  FPF packages may declare dependencies on packages managed by other package managers, so all dependencies are qualified with their package manager.  For example, the following Git `config` section declares dependencies on `foo` from APT and `bar` from FPF:
+
+	[fpf "apt"]
+		foo = 0.0.0-1
+	[fpf "fpf"]
+		bar = 0.0.0
+
+The following package managers are supported; they should be examined in this order during installation:
+
+1. `apt`  (Only examined if `apt-get` and `dpkg` are available on `PATH`.)
+2. `yum`  (Only examined if `yum` and `rpm` are available on `PATH`.)
+3. `gem`
+4. `npm`
+5. `pear`
+6. `pecl`
+7. `pip`
+8. `fpf`
+
+The values of the `git-config`(1) names `fpf.apt.foo` and `fpf.fpf.bar` above may take either of the following forms:
+
+* <code><em>version</em></code>: the minimum version number required to meet the dependency.  Use `0` to accept any version.
+* <code><em>version</em> pinned</code>: the exact version number required to meet the dependency.
 
 Files and directories in an FPF package may have any access mode, including being `setuid`, `setgid`, `sticky`.  The complete access mode is stored in the Git tree objects in the package and the mode is restored when the package is installed.  Full use of the access mode means that `git-write-tree` and `git-checkout` can't be used directly on the package.
 
