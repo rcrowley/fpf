@@ -1,20 +1,14 @@
-fpf: Effing Package Format
+FPF: Effing Package Format
 ==========================
 
-Yes, this is a new package format.  It is very opinionated and perhaps you'll like it.
-
-TODO Remove considerations for problems we no longer have.
-
-TODO Simplify package maintainer's life by doing less in better defined ways.
-
-TODO Play nicely with other package managers.
+Yes, this is a new package format.  It strives to remove considerations for problems we no longer have, simplify the package maintainer's life by doing less in better defined ways, and play nicely with other package managers.
 
 The plan
 --------
 
 1. Format specification.
 2. `fpf-build`, `fpf-install`, `fpf-check`, and `fpf-remove`.
-3. Repository specification and [Freight](https://github.com/rcrowley/freight) integration.
+3. Archive specification and [Freight](https://github.com/rcrowley/freight) integration.
 4. [`fpm`](https://github.com/jordansissel/fpm) integration.
 
 Unfeatures
