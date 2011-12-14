@@ -11,6 +11,8 @@
 
 set -e
 
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
 # The default architecture is this architecture.  This may be overridden with
 # `-a` or omitted (which means the package runs on any architecture with `-A`.
 ARCH="$({ dpkg --print-architecture || rpm --eval "%_arch"; } 2>"/dev/null")"
@@ -83,8 +85,6 @@ export GIT_DIR="$TMP/work.git"
 git config --add "fpf.name" "$NAME"
 git config --add "fpf.version" "$VERSION"
 # TODO User-specified $TMP/work.git/description.
-
-. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
 # Write to Git's object store and update `HEAD` to point to the commit and
 # tree just created.

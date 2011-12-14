@@ -6,6 +6,8 @@
 
 set -e
 
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
 # The default prefix is the one in which the FPF tools are installed.
 PREFIX="$(dirname "$(dirname "$0")")"
 
@@ -61,8 +63,6 @@ cp -R "$TMP/work.git" "$LIB/$NAME/.git"
 export GIT_DIR="$LIB/$NAME/.git"
 export GIT_WORK_TREE="$LIB/$NAME"
 git config --bool "core.bare" "false"
-
-. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
 # Checkout a working copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.

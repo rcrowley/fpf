@@ -6,6 +6,8 @@
 
 set -e
 
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
 # The default prefix is the one in which the FPF tools are installed.
 PREFIX="$(dirname "$(dirname "$0")")"
 
@@ -42,8 +44,6 @@ trap "rm -f \"$TMP\"" EXIT INT TERM
 # Export `GIT_DIR` for subsequent `git`(1) commands.
 export GIT_DIR="$LIB/$NAME/.git"
 export GIT_WORK_TREE="$LIB/$NAME"
-
-. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
 # Verify the access mode of objects in the working copy match those in
 # the package.
