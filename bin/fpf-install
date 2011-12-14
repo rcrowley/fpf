@@ -6,6 +6,7 @@
 
 set -e
 
+# The default prefix is the one in which the FPF tools are installed.
 PREFIX="$(dirname "$(dirname "$0")")"
 
 usage() {
@@ -25,9 +26,11 @@ done
 PACKAGE="$1"
 [ -z "$PREFIX" -o -z "$PACKAGE" ] && usage 1
 
+# Extract the package and its metadata into a temporary directory, which
+# will all be cleaned up at exit.  Export `GIT_DIR` for subsequent `git`(1)
+# commands.
 TMP="$(mktemp -d)"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
-
 mkdir "$TMP/work.git"
 tar xf "$PACKAGE" -C "$TMP/work.git"
 export GIT_DIR="$TMP/work.git"
@@ -36,6 +39,7 @@ NAME="$(git config "fpf.name")"
 VERSION="$(git config "fpf.version")"
 [ -z "$VERSION" ] && echo "fpf: $PACKAGE has no version" >&2 && exit 1
 
+# Verify that no version of this package is already installed in this prefix.
 LIB="$PREFIX/lib/fpf"
 mkdir -p "$LIB"
 if [ -d "$LIB/$NAME" ]
@@ -44,6 +48,10 @@ then
 	echo "fpf: $NAME $INST_VERSION already installed" >&2 && exit 1
 fi
 
+# Copy the package contents into FPF's library.  This is a staging location
+# that's used throughout the lifetime of the package to verify its integrity.
+# Export `GIT_DIR` and `GIT_WORK_TREE` for subsequent `git`(1) commands and
+# turn this repository non-bare.  The working copy will be populated shortly.
 mkdir "$LIB/$NAME"
 cp -R "$TMP/work.git" "$LIB/$NAME/.git"
 export GIT_DIR="$LIB/$NAME/.git"
@@ -52,10 +60,16 @@ git config --bool "core.bare" "false"
 
 . "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
+# Checkout a working copy of the package in FPF's library.  `git-status`(1)
+# and `git-diff-files`(1) are now able to verify the integrity of the package.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
 _git_checkout_tree "$TREE" "$GIT_WORK_TREE"
 
+# Install the package in this prefix by creating directories and hard linking
+# regular files from the working copy.  By verifying that the hard links
+# are intact and the working copy is in order, the installation's integrity
+# may be verified.
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type d -printf '%P\n' |
 while read PATHNAME
 do mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" "$PREFIX/$PATHNAME"
@@ -65,7 +79,12 @@ while read PATHNAME
 do ln "$LIB/$NAME/$PATHNAME" "$PREFIX/$PATHNAME"
 done
 
+# Update Git's index, which enables Git's typical working copy integrity
+# checks.  Without these commands, the index file contains null bytes for
+# all the `stat`(2) fields stored in the index.
 git reset >"/dev/null"
 git update-index --refresh
 
+# Verify the installation's integrity for good measure.  This isn't strictly
+# necessary but it's a good sanity check for `fpf-check`(1).
 $(dirname "$0")/fpf-check --prefix="$PREFIX" "$NAME" >"/dev/null"

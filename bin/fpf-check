@@ -6,6 +6,7 @@
 
 set -e
 
+# The default prefix is the one in which the FPF tools are installed.
 PREFIX="$(dirname "$(dirname "$0")")"
 
 usage() {
@@ -25,21 +26,29 @@ done
 NAME="$1"
 [ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
+# Perform a quick sanity check: make sure the package is installed.
 LIB="$PREFIX/lib/fpf"
 [ ! -d "$LIB/$NAME" ] && echo "fpf: $NAME is not installed" >&2 && exit 1
 
+# Create a temporary directory, which will be cleaned up at exit.  This file
+# collects standard output from `_verify_mode` function calls.
 TMP="$(mktemp)"
 trap "rm -f \"$TMP\"" EXIT INT TERM
 
+# Export `GIT_DIR` for subsequent `git`(1) commands.
 export GIT_DIR="$LIB/$NAME/.git"
 export GIT_WORK_TREE="$LIB/$NAME"
 
 . "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
+# Verify the access mode of objects in the working copy match those in
+# the package.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_ls_tree "$TREE" "" >>"$TMP"
+_verify_mode "$TREE" "" >>"$TMP"
 
+# Verify that files in the working copy are hard linked into the installation
+# prefix in the expected locations.
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
 while read PATHNAME
 do
@@ -52,6 +61,10 @@ do
 	fi
 done >>"$TMP"
 
+# Verify that none of the installed files have been changed from their
+# packaged versions.
 git diff-files --color --exit-code --stat
 
+# If the mode and inode verifications above encountered any problems, the
+# size of the temporary file will be non-zero.
 [ "$(stat -c"%s" "$TMP")" = 0 ] || exit 1

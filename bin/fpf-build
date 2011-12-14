@@ -10,6 +10,8 @@
 
 set -e
 
+# The default architecture is this architecture.  This may be overridden with
+# `-a` or omitted (which means the package runs on any architecture with `-A`.
 ARCH="$({ dpkg --print-architecture || rpm --eval "%_arch"; } 2>"/dev/null")"
 
 usage() {
@@ -40,6 +42,10 @@ done
 PACKAGE="$1"
 [ -z "$DIRNAME" -o -z "$NAME" -o -z "$VERSION" -o -z "$PACKAGE" ] && usage 1
 
+# Create a bare Git repository in a temporary directory, which will all be
+# cleaned up at exit.  Even the default bare Git repository has files FPF
+# doesn't need, so those are removed early.  Export `GIT_DIR` for subsequent
+# `git`(1) commands.
 TMP="$(mktemp -d)"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
 git init --bare -q "$TMP/work.git"
@@ -51,17 +57,23 @@ rm -rf \
 	"$TMP/work.git/objects/info" \
 	"$TMP/work.git/objects/pack" \
 	"$TMP/work.git/refs/tags"
-# TODO User-specified $TMP/work.git/description.
 export GIT_DIR="$TMP/work.git"
+
+# Set `fpf.arch`, `fpf.name`, and `fpf.version` with `git-config`(1).  Git's
+# `config` file is used to store package metadata.
 [ -z "$ARCH" ] || git config --add "fpf.arch" "$ARCH"
 git config --add "fpf.name" "$NAME"
 git config --add "fpf.version" "$VERSION"
+# TODO User-specified $TMP/work.git/description.
 
 . "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
+# Write to Git's object store and update `HEAD` to point to the commit and
+# tree just created.
 TREE="$(_git_write_tree "$DIRNAME")"
 COMMIT="$(_git_commit "$TREE")"
 git update-ref "refs/heads/$NAME" "$COMMIT"
 git symbolic-ref "HEAD" "refs/heads/$NAME"
 
+# Wrap the package in a `tar`(5) archive.
 tar cf "$PACKAGE" -C "$TMP/work.git" "."
