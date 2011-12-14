@@ -1,9 +1,10 @@
 #!/bin/sh
 
-#/ Usage: fpf-build [-A|-a<arch>] -d<dirname> -n<name> -v<version> <package>
+#/ Usage: fpf-build [-A|-a<arch>] -d<dirname>|-g<treeish> -n<name> -v<version> <package>
 #/   -A          package is architecture-independent
 #/   -a<arch>    pointer size (32 or 64) on target systems
-#/   -d<dirname> directory with files to be packaged
+#/   -d<dirname> directory to package
+#/   -g<treeish> tree or commit to package
 #/   -n<name>    package name
 #/   -v<version> package version number
 #/   <package>   package pathname
@@ -28,6 +29,9 @@ do
 		-d|--dirname) DIRNAME="$2" shift 2;;
 		-d*) DIRNAME="$(echo $1 | cut -c3-)" shift;;
 		--dirname=*) DIRNAME="$(echo $1 | cut -c11-)" shift;;
+		-g|--git) TREEISH="$2" shift 2;;
+		-g*) TREEISH="$(echo $1 | cut -c3-)" shift;;
+		--git=*) TREEISH="$(echo $1 | cut -c7-)" shift;;
 		-n|--name) NAME="$2" shift 2;;
 		-n*) NAME="$(echo $1 | cut -c3-)" shift;;
 		--name=*) NAME="$(echo $1 | cut -c8-)" shift;;
@@ -40,14 +44,28 @@ do
 	esac
 done
 PACKAGE="$1"
-[ -z "$DIRNAME" -o -z "$NAME" -o -z "$VERSION" -o -z "$PACKAGE" ] && usage 1
+[ -z "$DIRNAME" -a -z "$TREEISH" -o -n "$DIRNAME" -a -n "$TREEISH" ] && usage 1
+[ -z "$NAME" -o -z "$VERSION" -o -z "$PACKAGE" ] && usage 1
 
-# Create a bare Git repository in a temporary directory, which will all be
-# cleaned up at exit.  Even the default bare Git repository has files FPF
-# doesn't need, so those are removed early.  Export `GIT_DIR` for subsequent
-# `git`(1) commands.
+# Create a temporary directory, which will be cleaned up at exit.
 TMP="$(mktemp -d)"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
+
+# If the files being packaged are coming from a Git repository, translate
+# this into a directory via `git-archive`(1).  This is a dubious feature
+# since the vast majority of Git repositories contain files like README
+# which would cause conflicts when a second package was installed on the
+# same prefix.
+if [ -z "$DIRNAME" ]
+then
+	DIRNAME="$TMP/work"
+	mkdir "$DIRNAME"
+	git archive --format="tar" "$TREEISH" | tar xC "$DIRNAME"
+fi
+
+# Create a bare Git repository in the temporary directory.  Even the default
+# bare Git repository has files FPF doesn't need, so those are removed early.
+# Export `GIT_DIR` for subsequent `git`(1) commands.
 git init --bare -q "$TMP/work.git"
 rm -rf \
 	"$TMP/work.git/branches" \
