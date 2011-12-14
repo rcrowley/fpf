@@ -76,7 +76,7 @@ _git_checkout_tree "$TREE" "$GIT_WORK_TREE"
 # may be verified.
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type d -printf '%P\n' |
 while read PATHNAME
-do mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" "$PREFIX/$PATHNAME"
+do mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" -p "$PREFIX/$PATHNAME"
 done
 find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
 while read PATHNAME
