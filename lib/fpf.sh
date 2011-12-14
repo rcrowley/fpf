@@ -15,17 +15,15 @@ _arch() {
 #
 # This function requires `GIT_DIR` and `GIT_WORK_TREE` to be exported.
 _git_checkout_tree() {
-	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
+	_git_ls_tree "$1" | while read MODE TYPE SHA PATHNAME
 	do
 		MODE="$(echo -n "$MODE" | tail -c4)"
 		case "$TYPE" in
 			"blob")
-				git cat-file "blob" "$SHA" >"$2/$FILENAME"
-				chmod "$MODE" "$2/$FILENAME";;
+				git cat-file "blob" "$SHA" >"$2/$PATHNAME"
+				chmod "$MODE" "$2/$PATHNAME";;
 			"tree")
-				mkdir -m"$MODE" -p "$2/$FILENAME"
-				_git_checkout_tree "$SHA" "$2/$FILENAME";;
-			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
+				mkdir -m"$MODE" -p "$2/$PATHNAME";;
 		esac
 	done
 }
@@ -45,6 +43,26 @@ author $(git config "user.name") <$(git config "user.email")> $TS +0000
 committer $(git config "user.name") <$(git config "user.email")> $TS +0000
 
 EOF
+}
+
+# `_git_ls_tree "$TREE"`
+#
+# Print the mode, type, sha, and pathname of each entry in a `$TREE`,
+# recursively.  The only difference between this and `git-ls-tree`(1) is the
+# fact that this takes care of recursion on nested tree objects automatically.
+#
+# This function requires `GIT_DIR` to be exported.
+_git_ls_tree() {
+	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
+	do
+		[ -z "$2" ] && PATHNAME="$FILENAME" || PATHNAME="$2/$FILENAME"
+		echo "$MODE" "$TYPE" "$SHA" "$PATHNAME"
+		case "$TYPE" in
+			"blob") ;;
+			"tree") _git_ls_tree "$SHA" "$PATHNAME";;
+			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
+		esac
+	done
 }
 
 # `_git_write_tree "$DIRNAME"`
@@ -83,35 +101,4 @@ _mode() {
 	then echo "0$MODE"
 	else echo "$MODE"
 	fi
-}
-
-# `_verify_mode "$TREE"`
-#
-# Verify the access mode of objects in the working copy match those in
-# `$TREE`, recursively.  A character is printed to standard output and a
-# message is printed to standard error for each missing file or mismatched
-# mode.  Verification fails if any characters are printed to standard output.
-#
-# This function requires `GIT_DIR` and `GIT_WORK_TREE` to be exported.
-_verify_mode() {
-	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
-	do
-		PATHNAME="$2/$FILENAME"
-		L_MODE="$(echo -n "$MODE" | tail -c4)"
-		P_MODE="$(_mode "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"
-		if [ -z "$P_MODE" ]
-		then
-			echo "fpf: $PREFIX/$PATHNAME is missing" >&2
-			echo 1
-		elif [ -n "$L_MODE" -a "$L_MODE" != "$P_MODE" ]
-		then
-			echo "fpf: $PREFIX/$PATHNAME mode is $P_MODE, should be $L_MODE" >&2
-			echo 1
-		fi
-		case "$TYPE" in
-			"blob") ;;
-			"tree") _verify_mode "$SHA" "$PATHNAME";;
-			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
-		esac
-	done
 }

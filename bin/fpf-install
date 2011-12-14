@@ -77,11 +77,8 @@ export GIT_WORK_TREE="$PREFIX"
 # Update Git's index, which enables Git's typical working copy integrity
 # checks.  Without these commands, the index file contains null bytes for
 # all the `stat`(2) fields stored in the index.
-hexdump "$GIT_DIR/index" || true
 git reset >"/dev/null"
-hexdump "$GIT_DIR/index" || true
 git update-index --refresh
-hexdump "$GIT_DIR/index" || true
 
 # Verify the installation's integrity for good measure.  This isn't strictly
 # necessary but it's a good sanity check for `fpf-check`(1).
