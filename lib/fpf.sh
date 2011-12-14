@@ -1,3 +1,11 @@
+# `_arch`
+#
+# Write the architecture of this system to standard output.
+_arch() {
+	dpkg --print-architecture 2>"/dev/null" ||
+	rpm --eval "%_arch" 2>"/dev/null"
+}
+
 # `_git_checkout "$TREE" "$DIRNAME"`
 #
 # Checkout `$TREE` in `$DIRNAME`, recursively.  This works about like

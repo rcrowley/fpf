@@ -40,6 +40,9 @@ trap "rm -rf \"$TMP\"" EXIT INT TERM
 mkdir "$TMP/work.git"
 tar xf "$PACKAGE" -C "$TMP/work.git"
 export GIT_DIR="$TMP/work.git"
+ARCH="$(git config "fpf.arch")"
+[ -n "$ARCH" -a "$ARCH" != "$(_arch)" ] &&
+echo "fpf: $PACKAGE is for $ARCH, not $(_arch)" >&2 && exit 1
 NAME="$(git config "fpf.name")"
 [ -z "$NAME" ] && echo "fpf: $PACKAGE has no name" >&2 && exit 1
 VERSION="$(git config "fpf.version")"

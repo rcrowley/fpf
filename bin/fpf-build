@@ -15,7 +15,7 @@ set -e
 
 # The default architecture is this architecture.  This may be overridden with
 # `-a` or omitted (which means the package runs on any architecture with `-A`.
-ARCH="$({ dpkg --print-architecture || rpm --eval "%_arch"; } 2>"/dev/null")"
+ARCH="$(_arch)"
 
 usage() {
 	grep "^#/" "$0" | cut -c4- 1>&2
