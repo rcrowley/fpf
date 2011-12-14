@@ -23,7 +23,7 @@ _git_checkout_tree() {
 				git cat-file "blob" "$SHA" >"$2/$FILENAME"
 				chmod "$MODE" "$2/$FILENAME";;
 			"tree")
-				mkdir -m"$MODE" "$2/$FILENAME"
+				mkdir -m"$MODE" -p "$2/$FILENAME"
 				_git_checkout_tree "$SHA" "$2/$FILENAME";;
 			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
 		esac

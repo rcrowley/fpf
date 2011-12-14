@@ -34,36 +34,22 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 
 # Perform a quick sanity check: make sure the package is installed.
 LIB="$PREFIX/lib/fpf"
-[ ! -d "$LIB/$NAME" ] && echo "fpf: $NAME is not installed" >&2 && exit 1
+[ ! -d "$LIB/$NAME.git" ] && echo "fpf: $NAME is not installed" >&2 && exit 1
 
 # Create a temporary directory, which will be cleaned up at exit.  This file
 # collects standard output from `_verify_mode` function calls.
 TMP="$(mktemp)"
 trap "rm -f \"$TMP\"" EXIT INT TERM
 
-# Export `GIT_DIR` for subsequent `git`(1) commands.
-export GIT_DIR="$LIB/$NAME/.git"
-export GIT_WORK_TREE="$LIB/$NAME"
+# Export `GIT_DIR` and `GIT_WORK_TREE` for subsequent `git`(1) commands.
+export GIT_DIR="$LIB/$NAME.git"
+export GIT_WORK_TREE="$PREFIX"
 
 # Verify the access mode of objects in the working copy match those in
 # the package.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
 _verify_mode "$TREE" "" >>"$TMP"
-
-# Verify that files in the working copy are hard linked into the installation
-# prefix in the expected locations.
-find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
-while read PATHNAME
-do
-	L_INO="$(stat -c"%i" "$LIB/$NAME/$PATHNAME" 2>"/dev/null" || true)"
-	P_INO="$(stat -c"%i" "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"
-	if [ -n "$L_INO" -a -n "$P_INO" -a "$L_INO" != "$P_INO" ]
-	then
-		echo "fpf: $PREFIX/$PATHNAME inode is $P_INO, should be $L_INO" >&2
-		echo 1
-	fi
-done >>"$TMP"
 
 # Verify that none of the installed files have been changed from their
 # packaged versions.

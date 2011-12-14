@@ -47,15 +47,9 @@ Files and directories are owned by the effective user and group of the `fpf-inst
 
 Objects are compressed in Git repositories so compression of the outer `tar`(5) archive would reclaim little, if any, space and would hinder quickly extracting package metadata.
 
-Package installation is a two step process:
+Package installation begins by extracting the bare Git repository into a temporary location.  After reading package metadata, the package can be moved into <code><em>prefix</em>/lib/fpf/<em>name</em>.git</code>.  The repository should be made non-bare and a working copy should be checked out in <code><em>prefix</em></code>.  `git-checkout`(1) can't be used here because it does not respect the full access mode stored in Git tree objects.
 
-1. Create a working copy of the Git repository.
-2. Hard link files from the working copy into place within the installation prefix.
-
-Having a working copy provides another two step process for checking the integrity of an installed package:
-
-1. Verify the access mode of all files and directories and the link count of all regular files.
-2. Verify that the working copy matches the package's Git commit.
+The integrity of an installed package may be verified by `git-status`(1), `git-diff-files`(1), and friends.
 
 FPF package archives should be served over HTTP.  An archive is identified by its URL, which should be a directory containing `index.txt`.  Each line of this file lists the relative pathname and SHA1 sum of a package in the same format as `sha1sum`(1): the SHA1 sum, two spaces, and the pathname.
 

@@ -33,64 +33,55 @@ PACKAGE="$1"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
 # Extract the package and its metadata into a temporary directory, which
-# will all be cleaned up at exit.  Export `GIT_DIR` for subsequent `git`(1)
-# commands.
-TMP="$(mktemp -d)"
+# will be cleaned up at exit.  Check that the metadata necessary for all
+# FPF packages is present using the temporary `GIT_DIR`.
+LIB="$PREFIX/lib/fpf"
+mkdir -p "$LIB"
+TMP="$(mktemp -d --tmpdir="$LIB")"
+export GIT_DIR="$TMP"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
-mkdir "$TMP/work.git"
-tar xf "$PACKAGE" -C "$TMP/work.git"
-export GIT_DIR="$TMP/work.git"
-ARCH="$(git config "fpf.arch")"
+tar xf "$PACKAGE" -C "$TMP"
+cat "$GIT_DIR/config"
+ARCH="$(git config "fpf.arch" || true)"
 [ -n "$ARCH" -a "$ARCH" != "$(_arch)" ] &&
 echo "fpf: $PACKAGE is for $ARCH, not $(_arch)" >&2 && exit 1
-NAME="$(git config "fpf.name")"
+NAME="$(git config "fpf.name" || true)"
 [ -z "$NAME" ] && echo "fpf: $PACKAGE has no name" >&2 && exit 1
-VERSION="$(git config "fpf.version")"
+VERSION="$(git config "fpf.version" || true)"
 [ -z "$VERSION" ] && echo "fpf: $PACKAGE has no version" >&2 && exit 1
 
 # Verify that no version of this package is already installed in this prefix.
-LIB="$PREFIX/lib/fpf"
-mkdir -p "$LIB"
-if [ -d "$LIB/$NAME" ]
+# Export `GIT_DIR` for subsequent `git`(1) commands.
+export GIT_DIR="$LIB/$NAME.git"
+if [ -d "$GIT_DIR" ]
 then
-	INST_VERSION="$(git --git-dir "$LIB/$NAME/.git" config "fpf.version")"
+	INST_VERSION="$(git config "fpf.version")"
 	echo "fpf: $NAME $INST_VERSION already installed" >&2 && exit 1
 fi
 
-# Copy the package contents into FPF's library.  This is a staging location
-# that's used throughout the lifetime of the package to verify its integrity.
-# Export `GIT_DIR` and `GIT_WORK_TREE` for subsequent `git`(1) commands and
-# turn this repository non-bare.  The working copy will be populated shortly.
-mkdir "$LIB/$NAME"
-cp -R "$TMP/work.git" "$LIB/$NAME/.git"
-export GIT_DIR="$LIB/$NAME/.git"
-export GIT_WORK_TREE="$LIB/$NAME"
-git config --bool "core.bare" "false"
+# Now that the name of the package is known, move it into the appropriate
+# place in FPF's library directory.
+mv "$TMP" "$GIT_DIR"
 
 # Checkout a working copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_checkout_tree "$TREE" "$GIT_WORK_TREE"
+_git_checkout_tree "$TREE" "$PREFIX"
 
-# Install the package in this prefix by creating directories and hard linking
-# regular files from the working copy.  By verifying that the hard links
-# are intact and the working copy is in order, the installation's integrity
-# may be verified.
-find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type d -printf '%P\n' |
-while read PATHNAME
-do mkdir -m"$(stat -c"%a" "$LIB/$NAME/$PATHNAME")" -p "$PREFIX/$PATHNAME"
-done
-find "$LIB/$NAME" -mindepth 1 -name ".git" -prune -o -type f -printf '%P\n' |
-while read PATHNAME
-do ln "$LIB/$NAME/$PATHNAME" "$PREFIX/$PATHNAME"
-done
+# Now the repository is non-bare, though the working copy is intermingled
+# with other packages installed under this prefix.
+git config --bool "core.bare" "false"
+export GIT_WORK_TREE="$PREFIX"
 
 # Update Git's index, which enables Git's typical working copy integrity
 # checks.  Without these commands, the index file contains null bytes for
 # all the `stat`(2) fields stored in the index.
+hexdump "$GIT_DIR/index" || true
 git reset >"/dev/null"
+hexdump "$GIT_DIR/index" || true
 git update-index --refresh
+hexdump "$GIT_DIR/index" || true
 
 # Verify the installation's integrity for good measure.  This isn't strictly
 # necessary but it's a good sanity check for `fpf-check`(1).
