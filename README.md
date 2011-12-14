@@ -3,6 +3,12 @@ fpf: Effing Package Format
 
 Yes, this is a new package format.  It is very opinionated and perhaps you'll like it.
 
+TODO Remove considerations for problems we no longer have.
+
+TODO Simplify package maintainer's life by doing less in better defined ways.
+
+TODO Play nicely with other package managers.
+
 The plan
 --------
 
