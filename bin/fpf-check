@@ -36,8 +36,8 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 LIB="$PREFIX/lib/fpf"
 [ ! -d "$LIB/$NAME.git" ] && echo "fpf: $NAME is not installed" >&2 && exit 1
 
-# Create a temporary directory, which will be cleaned up at exit.  This file
-# collects standard output from `_verify_mode` function calls.
+# Create a temporary file, which will be cleaned up at exit.  This file
+# collects standard output while verifying the mode of installed files.
 TMP="$(mktemp)"
 trap "rm -f \"$TMP\"" EXIT INT TERM
 
@@ -49,7 +49,7 @@ export GIT_WORK_TREE="$PREFIX"
 # the package.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_ls_tree "$TREE" | while read MODE TYPE SHA PATHNAME
+_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
 do
 	L_MODE="$(echo -n "$MODE" | tail -c4)"
 	P_MODE="$(_mode "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"

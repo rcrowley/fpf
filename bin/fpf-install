@@ -63,11 +63,33 @@ fi
 # place in FPF's library directory.
 mv "$TMP" "$GIT_DIR"
 
+# Create a temporary file to hold rollback information.  Commands listed
+# in this file will be run and then the file will be cleaned up on exit.
+TMP="$(mktemp)"
+echo "rm -rf \"$GIT_DIR\"" >"$TMP"
+trap "tac \"$TMP\" | sh; rm -f \"$TMP\"" EXIT INT TERM
+
 # Checkout a working copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.
+# Files must not exist or the installation will be rolled back.  Each file
+# and directory created are added to the rollback procedure.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_checkout_tree "$TREE" "$PREFIX"
+_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
+do
+	MODE="$(echo -n "$MODE" | tail -c4)"
+	case "$TYPE" in
+		"blob")
+			[ -f "$PREFIX/$PATHNAME" ] &&
+			echo "fpf: $PREFIX/$PATHNAME already installed" >&2 && exit 1
+			git cat-file "blob" "$SHA" >"$PREFIX/$PATHNAME"
+			chmod "$MODE" "$PREFIX/$PATHNAME"
+			echo "rm \"$PREFIX/$PATHNAME\"";;
+		"tree")
+			mkdir -m"$MODE" -p "$PREFIX/$PATHNAME"
+			echo "rmdir --ignore-fail-on-non-empty \"$PREFIX/$PATHNAME\"";;
+	esac
+done >>"$TMP"
 
 # Now the repository is non-bare, though the working copy is intermingled
 # with other packages installed under this prefix.
@@ -83,3 +105,6 @@ git update-index --refresh
 # Verify the installation's integrity for good measure.  This isn't strictly
 # necessary but it's a good sanity check for `fpf-check`(1).
 $(dirname "$0")/fpf-check --prefix="$PREFIX" "$NAME" >"/dev/null"
+
+# Success!  Cancel installation rollback.
+truncate -s"0" "$TMP"

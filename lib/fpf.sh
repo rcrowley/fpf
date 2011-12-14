@@ -6,28 +6,6 @@ _arch() {
 	rpm --eval "%_arch" 2>"/dev/null"
 }
 
-# `_git_checkout "$TREE" "$DIRNAME"`
-#
-# Checkout `$TREE` in `$DIRNAME`, recursively.  This works about like
-# `git-checkout`(1) with two exceptions: it begins with a tree object, not a
-# commit object, and it respects the full possibilities expressed by the
-# access mode stored with each blob or tree object in the tree.
-#
-# This function requires `GIT_DIR` and `GIT_WORK_TREE` to be exported.
-_git_checkout_tree() {
-	_git_ls_tree "$1" | while read MODE TYPE SHA PATHNAME
-	do
-		MODE="$(echo -n "$MODE" | tail -c4)"
-		case "$TYPE" in
-			"blob")
-				git cat-file "blob" "$SHA" >"$2/$PATHNAME"
-				chmod "$MODE" "$2/$PATHNAME";;
-			"tree")
-				mkdir -m"$MODE" -p "$2/$PATHNAME";;
-		esac
-	done
-}
-
 # `_git_commit "$TREE"`
 #
 # Record a new commit referencing `$TREE` using the currently configured
@@ -45,21 +23,21 @@ committer $(git config "user.name") <$(git config "user.email")> $TS +0000
 EOF
 }
 
-# `_git_ls_tree "$TREE"`
+# `_git_ls "$TREE"`
 #
 # Print the mode, type, sha, and pathname of each entry in a `$TREE`,
 # recursively.  The only difference between this and `git-ls-tree`(1) is the
 # fact that this takes care of recursion on nested tree objects automatically.
 #
 # This function requires `GIT_DIR` to be exported.
-_git_ls_tree() {
+_git_ls() {
 	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
 	do
 		[ -z "$2" ] && PATHNAME="$FILENAME" || PATHNAME="$2/$FILENAME"
 		echo "$MODE" "$TYPE" "$SHA" "$PATHNAME"
 		case "$TYPE" in
 			"blob") ;;
-			"tree") _git_ls_tree "$SHA" "$PATHNAME";;
+			"tree") _git_ls "$SHA" "$PATHNAME";;
 			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
 		esac
 	done
