@@ -1,14 +1,14 @@
 FPF: Effing Package Format
 ==========================
 
-Yes, this is a new package format.  It strives to remove considerations for problems we no longer have, simplify the package maintainer's life by doing less in better defined ways, and play nicely with other package managers.
+This is a new package format.  It strives to remove considerations for problems we no longer have, simplify the package maintainer's life by doing less in better defined ways, and play nicely with other package managers.
 
 The plan
 --------
 
-1. Format specification.
+1. FPF specification.
 2. `fpf-build`, `fpf-install`, `fpf-check`, and `fpf-remove`.
-3. Archive specification and [Freight](https://github.com/rcrowley/freight) integration.
+3. [FPR specification](https://github.com/rcrowley/fpr) and [Freight](https://github.com/rcrowley/freight) integration.
 4. [`fpm`](https://github.com/jordansissel/fpm) integration.
 
 Unfeatures
@@ -65,27 +65,6 @@ Objects are compressed in Git repositories so compression of the outer `tar`(5) 
 Package installation begins by extracting the bare Git repository into a temporary location.  After reading package metadata, the package can be moved into <code><em>prefix</em>/lib/fpf/<em>name</em>.git</code>.  The repository should be made non-bare and a working copy should be checked out in <code><em>prefix</em></code>.  `git-checkout`(1) can't be used here because it does not respect the full access mode stored in Git tree objects.
 
 The integrity of an installed package may be verified by `git-status`(1), `git-diff-files`(1), and friends.
-
-FPF package archives should be served over HTTP.  An archive is identified by its URL, which should be a directory containing `index.txt`.  Each line of this file lists the relative pathname and SHA1 sum of a package in the same format as `sha1sum`(1): the SHA1 sum, two spaces, and the pathname.
-
-Two components of the relative pathnames that appear in `index.txt` have special meaning.  The name of the directory containing the package must be the version number of that package.  The name of the directory containing the version directory must be the name of the package.  As an example, consider version `0.0.0` of the package `foo` in the archive `http://example.com/example`.  The following are valid URLs for the package file:
-
-* `http://example.com/example/foo/0.0.0/foo-0.0.0.fpf`
-* `http://example.com/example/foo/0.0.0/whatever.fpf`
-* `http://example.com/example/whatever/foo/0.0.0/foo-0.0.0.fpf`
-
-The following are invalid:
-
-* `http://example.com/foo/0.0.0/foo-0.0.0.fpf`: the package file is not in the archive directory.
-* `http://example.com/example/foo-0.0.0.fpf`: the package file is not in its name and version directories.
-* `http://example.com/example/foo/foo-0.0.0.fpf`: the package file is not in its version directory.
-* `http://example.com/example/foo-0.0.0/foo-0.0.0.fpf`: the package file is not in its name or version directories.
-
-Suppose `http://example.com/example/whatever/foo/0.0.0/foo-0.0.0.fpf` is the URL of the package file with SHA1 sum `0123456789012345678901234567890123456789` in the `http://example.com/example` archive.  `http://example.com/example/index.txt` must contain the following line:
-
-	0123456789012345678901234567890123456789  whatever/foo/0.0.0/foo-0.0.0.fpf
-
-The integrity of files within a package may be verified from the SHA1 sums maintained in the Git object store.  The integrity of a complete FPF package may be verified by its SHA1 sum as compared to the SHA1 sum that appears in `index.txt`.  The integrity of `index.txt` may be verified by the GPG signature in `index.txt.gpg`.  *Distribution of the GPG public key needed to verify this signature is still under consideration.*
 
 Related material
 ----------------
