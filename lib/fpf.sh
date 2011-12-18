@@ -148,18 +148,6 @@ committer $(git config "user.name") <$(git config "user.email")> $TS +0000
 EOF
 }
 
-# `fpf_git_config_prefix "$PREFIX"`
-#
-# Write all `git-config`(1) names and values to standard output with names
-# that begin with `$PREFIX`.  The prefix is stripped from the name before it
-# is written; for example, `foo.bar = baz` is written as `bar = baz` when
-# the prefix `foo.` is given.
-fpf_git_config_prefix() {
-	git config --get-regexp "^$(echo "$1" | sed 's/\./\\./g')" |
-	cut -c"$((${#1} + 1))-" ||
-	true
-}
-
 # `fpf_git_ls "$TREE"`
 #
 # Print the mode, type, sha, and pathname of each entry in a `$TREE`,
@@ -289,6 +277,6 @@ fpf_rpmvercmp_sort() {
 		echo -n "$LINE "
 		echo "$LINE" | fpf_rpmvercmp_sed
 	done |
-	sort -r -k2 |
-	cut -d" " -f1
+	sort -r -k"2" |
+	cut -d" " -f"1"
 }
