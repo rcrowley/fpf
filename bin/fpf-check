@@ -49,10 +49,10 @@ export GIT_WORK_TREE="$PREFIX"
 # the package.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
+fpf_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
 do
 	L_MODE="$(echo -n "$MODE" | tail -c4)"
-	P_MODE="$(_mode "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"
+	P_MODE="$(fpf_mode "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"
 	if [ -z "$P_MODE" ]
 	then
 		echo "fpf: $PREFIX/$PATHNAME is missing" >&2

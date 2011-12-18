@@ -15,7 +15,7 @@ set -e
 
 # The default architecture is this architecture.  This may be overridden with
 # `-a` or omitted (which means the package runs on any architecture with `-A`.
-ARCH="$(_arch)"
+ARCH="$(fpf_arch)"
 
 usage() {
 	grep "^#/" "$0" | cut -c4- 1>&2
@@ -81,15 +81,15 @@ export GIT_DIR="$TMP/work.git"
 
 # Set `fpf.arch`, `fpf.name`, and `fpf.version` with `git-config`(1).  Git's
 # `config` file is used to store package metadata.
-[ -z "$ARCH" ] || git config --add "fpf.arch" "$ARCH"
-git config --add "fpf.name" "$NAME"
-git config --add "fpf.version" "$VERSION"
+[ -z "$ARCH" ] || git config "fpf.arch" "$ARCH"
+git config "fpf.name" "$NAME"
+git config "fpf.version" "$VERSION"
 # TODO User-specified $TMP/work.git/description.
 
 # Write to Git's object store and update `HEAD` to point to the commit and
 # tree just created.
-TREE="$(_git_write_tree "$DIRNAME")"
-COMMIT="$(_git_commit "$TREE")"
+TREE="$(fpf_git_write_tree "$DIRNAME")"
+COMMIT="$(fpf_git_commit_tree "$TREE")"
 git update-ref "refs/heads/$NAME" "$COMMIT"
 git symbolic-ref "HEAD" "refs/heads/$NAME"
 

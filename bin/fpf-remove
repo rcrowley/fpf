@@ -46,7 +46,7 @@ export GIT_WORK_TREE="$PREFIX"
 # packages are placed on the same installation prefix.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_ls "$TREE" | tac | while read MODE TYPE SHA PATHNAME
+fpf_git_ls "$TREE" | tac | while read MODE TYPE SHA PATHNAME
 do
 	case "$TYPE" in
 		"blob") rm -f "$PREFIX/$PATHNAME";;

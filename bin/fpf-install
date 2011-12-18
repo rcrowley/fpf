@@ -1,12 +1,15 @@
 #!/bin/sh
 
-#/ Usage: fpf-install [--prefix=<prefix>] <package>
+#/ Usage: fpf-install [--no-deps] [--prefix=<prefix>] <package>
 #/   --prefix=<prefix> installation prefix
 #/   <package>         package pathname
 
 set -e
 
 . "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
+# The default is to manage dependencies.
+DEPS=1
 
 # The default prefix is the one in which the FPF tools are installed.
 PREFIX="$(dirname "$(dirname "$0")")"
@@ -18,6 +21,8 @@ usage() {
 while [ "$#" -gt 0 ]
 do
 	case "$1" in
+		--deps) DEPS=1 shift;;
+		--no-deps) DEPS=0 shift;;
 		--prefix) PREFIX="$2" shift 2;;
 		--prefix=*) PREFIX="$(echo "$1" | cut -c10-)" shift;;
 		-h|--help) usage 0;;
@@ -41,10 +46,9 @@ TMP="$(mktemp -d --tmpdir="$LIB")"
 export GIT_DIR="$TMP"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
 tar xf "$PACKAGE" -C "$TMP"
-cat "$GIT_DIR/config"
 ARCH="$(git config "fpf.arch" || true)"
-[ -n "$ARCH" -a "$ARCH" != "$(_arch)" ] &&
-echo "fpf: $PACKAGE is for $ARCH, not $(_arch)" >&2 && exit 1
+[ -n "$ARCH" -a "$ARCH" != "$(fpf_arch)" ] &&
+echo "fpf: $PACKAGE is for $ARCH, not $(fpf_arch)" >&2 && exit 1
 NAME="$(git config "fpf.name" || true)"
 [ -z "$NAME" ] && echo "fpf: $PACKAGE has no name" >&2 && exit 1
 VERSION="$(git config "fpf.version" || true)"
@@ -69,13 +73,104 @@ TMP="$(mktemp)"
 echo "rm -rf \"$GIT_DIR\"" >"$TMP"
 trap "tac \"$TMP\" | sh; rm -f \"$TMP\"" EXIT INT TERM
 
-# Checkout a working copy of the package in FPF's library.  `git-status`(1)
+# TODO Make dependencies that weren't already satisfied eligible for rollback.
+# TODO Installing the newest version is not guaranteed to satisfy a dependency.
+
+# Install dependencies from system package managers (APT and Yum) if those
+# package managers are present on this system.
+#
+# FIXME In `--no-deps` mode, the second version comparison will fail.
+if which apt-get >"/dev/null" 2>"/dev/null" &&
+which dpkg >"/dev/null" 2>"/dev/null"
+then
+	fpf_git_config_prefix "fpf.apt." | while read NAME OPERATOR VERSION
+	do
+		case "$OPERATOR" in
+			">=")
+				dpkg --compare-versions "$(
+					fpf_dpkg_version "$NAME"
+				)" ge "$VERSION" ||
+				fpf_if_deps sudo apt-get -q -y install "$NAME"
+				dpkg --compare-versions "$(
+					fpf_dpkg_version "$NAME"
+				)" ge "$VERSION";;
+			"==") fpf_if_deps sudo apt-get -q -y install "$NAME=$VERSION";;
+		esac
+	done
+fi
+if which yum >"/dev/null" 2>"/dev/null" &&
+which rpm >"/dev/null" 2>"/dev/null"
+then
+	fpf_git_config_prefix "fpf.yum." | while read NAME OPERATOR VERSION
+	do
+		case "$OPERATOR" in
+			">=")
+				fpf_rpmvercmp "$(fpf_rpm_version "$NAME")" ">=" "$VERSION" ||
+				fpf_if_deps sudo yum install "$NAME"
+				fpf_rpmvercmp "$(fpf_rpm_version "$NAME")" ">=" "$VERSION";;
+			"==") fpf_if_deps sudo yum install "$NAME-$VERSION";;
+		esac
+	done
+fi
+
+# Install dependencies from language-level package managers (RubyGems, etc.).
+# These package managers must exist on `$PATH`
+fpf_git_config_prefix "fpf.cpan." | while read NAME OPERATOR VERSION
+do
+	[ "$OPERATOR" != ">=" -a "$VERSION" != 0 ] &&
+	echo "fpf: CPAN can only install the latest version" >&2
+	fpf_if_deps cpan install "$NAME"
+done
+fpf_git_config_prefix "fpf.gem." | while read NAME OPERATOR VERSION
+do
+	[ "$OPERATOR" != ">=" ] && V="$VERSION" || V=">= $VERSION"
+	gem list -q -v"$V" "$NAME" || fpf_if_deps gem install "$NAME" "$V"
+done
+fpf_git_config_prefix "fpf.npm." | while read NAME OPERATOR VERSION
+do
+	case "$OPERATOR" in
+		">=") fpf_if_deps npm install "$NAME@>=$VERSION";;
+		"==") fpf_if_deps npm install "$NAME@$VERSION";;
+	esac
+done
+fpf_git_config_prefix "fpf.pear." | while read NAME OPERATOR VERSION
+do
+	case "$OPERATOR" in
+		">=") fpf_if_deps sudo pear install "$NAME";;
+		"==") fpf_if_deps sudo pear install "$NAME-$VERSION";;
+	esac
+done
+fpf_git_config_prefix "fpf.pecl." | while read NAME OPERATOR VERSION
+do
+	case "$OPERATOR" in
+		">=") fpf_if_deps sudo pecl install "$NAME";;
+		"==") fpf_if_deps sudo pecl install "$NAME-$VERSION";;
+	esac
+done
+fpf_git_config_prefix "fpf.pip." | while read NAME OPERATOR VERSION
+do
+	case "$OPERATOR" in
+		">=") fpf_if_deps pip install "$NAME";;
+		"==") fpf_if_deps pip install "$NAME==$VERSION";;
+	esac
+done
+
+# Install dependencies from FPR, the APT to FPF's dpkg.
+fpf_git_config_prefix "fpf.fpr." | while read NAME OPERATOR VERSION
+do
+	case "$OPERATOR" in
+		">=") fpf_if_deps fpr-install --prefix="$PREFIX" -m"$VERSION" "$NAME";;
+		"==") fpf_if_deps fpr-install --prefix="$PREFIX" -v"$VERSION" "$NAME";;
+	esac
+done
+
+# Checkout a woring copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.
 # Files must not exist or the installation will be rolled back.  Each file
 # and directory created are added to the rollback procedure.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
-_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
+fpf_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
 do
 	MODE="$(echo -n "$MODE" | tail -c4)"
 	case "$TYPE" in
