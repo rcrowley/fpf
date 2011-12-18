@@ -67,6 +67,14 @@ Package installation begins by extracting the bare Git repository into a tempora
 
 The integrity of an installed package may be verified by `git-status`(1), `git-diff-files`(1), and friends.
 
+Quirks
+------
+
+* As currently specified, dependencies whose name contains an underscore are not allowed.  This is a limitation imposed by `git-config`(1) and requires changing the organization of FPF package metadata.
+* Dependencies managed by APT, Yum, PEAR, and PECL can only be installed system-wide so these packages are installed using `sudo`(8).
+* Dependencies managed by RubyGems and `pip` are currently installed system-wide using `sudo`(8) but this should be made configurable.
+* Dependencies managed by NPM are installed in `$PREFIX/lib/node_modules`.  This may be a horrible idea and needs to be run past a real Node programmer.
+
 Related material
 ----------------
 
