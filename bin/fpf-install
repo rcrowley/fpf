@@ -94,7 +94,7 @@ then
 				)" ge "$VERSION";;
 			"==") fpf_if_deps sudo apt-get -q -y install "$NAME=$VERSION";;
 		esac
-	done
+	done 3>>"$TMP"
 fi
 if which yum >"/dev/null" 2>"/dev/null" &&
 which rpm >"/dev/null" 2>"/dev/null"
@@ -110,7 +110,7 @@ then
 				)" ">=" "$VERSION";;
 			"==") fpf_if_deps sudo yum install "$NAME-$VERSION";;
 		esac
-	done
+	done 3>>"$TMP"
 fi
 
 # Install dependencies from language-level package managers (RubyGems, etc.).
@@ -120,13 +120,13 @@ do
 	[ "$OPERATOR" != ">=" -a "$VERSION" != 0 ] &&
 	echo "fpf: CPAN can only install the latest version" >&2
 	fpf_if_deps cpan install "$NAME"
-done
+done 3>>"$TMP"
 fpf_git_config_prefix "fpf.gem." | while read NAME OPERATOR VERSION
 do
 	[ "$OPERATOR" != ">=" ] && V="$VERSION" || V=">= $VERSION"
 	gem list -i -q -v"$V" "$NAME" >"/dev/null" ||
 	fpf_if_deps sudo gem install -v"$V" "$NAME"
-done
+done 3>>"$TMP"
 fpf_git_config_prefix "fpf.npm." | while read NAME OPERATOR VERSION
 do
 	mkdir -p "$PREFIX/lib"
@@ -136,28 +136,28 @@ do
 		"==") fpf_if_deps npm install "$NAME@$VERSION";;
 	esac
 	cd "-"
-done
+done 3>>"$TMP"
 fpf_git_config_prefix "fpf.pear." | while read NAME OPERATOR VERSION
 do
 	case "$OPERATOR" in
 		">=") fpf_if_deps sudo pear install "$NAME";;
 		"==") fpf_if_deps sudo pear install "$NAME-$VERSION";;
 	esac
-done
+done 3>>"$TMP"
 fpf_git_config_prefix "fpf.pecl." | while read NAME OPERATOR VERSION
 do
 	case "$OPERATOR" in
 		">=") fpf_if_deps sudo pecl install "$NAME";;
 		"==") fpf_if_deps sudo pecl install "$NAME-$VERSION";;
 	esac
-done
+done 3>>"$TMP"
 fpf_git_config_prefix "fpf.pip." | while read NAME OPERATOR VERSION
 do
 	case "$OPERATOR" in
 		">=") fpf_if_deps sudo pip install "$NAME";;
 		"==") fpf_if_deps sudo pip install "$NAME==$VERSION";;
 	esac
-done
+done 3>>"$TMP"
 
 # Install dependencies from FPR, the APT to FPF's dpkg.
 fpf_git_config_prefix "fpf.fpr." | while read NAME OPERATOR VERSION
@@ -166,7 +166,7 @@ do
 		">=") fpf_if_deps fpr-install --prefix="$PREFIX" -m"$VERSION" "$NAME";;
 		"==") fpf_if_deps fpr-install --prefix="$PREFIX" -v"$VERSION" "$NAME";;
 	esac
-done
+done 3>>"$TMP"
 
 # Checkout a woring copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.
@@ -183,12 +183,12 @@ do
 			echo "fpf: $PREFIX/$PATHNAME already installed" >&2 && exit 1
 			git cat-file "blob" "$SHA" >"$PREFIX/$PATHNAME"
 			chmod "$MODE" "$PREFIX/$PATHNAME"
-			echo "rm \"$PREFIX/$PATHNAME\"";;
+			echo "rm \"$PREFIX/$PATHNAME\"" >&3;;
 		"tree")
 			mkdir -m"$MODE" -p "$PREFIX/$PATHNAME"
-			echo "rmdir --ignore-fail-on-non-empty \"$PREFIX/$PATHNAME\"";;
+			echo "rmdir --ignore-fail-on-non-empty \"$PREFIX/$PATHNAME\"" >&3;;
 	esac
-done >>"$TMP"
+done 3>>"$TMP"
 
 # Now the repository is non-bare, though the working copy is intermingled
 # with other packages installed under this prefix.
