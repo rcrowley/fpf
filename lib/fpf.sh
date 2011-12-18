@@ -10,7 +10,7 @@ fpf_arch() {
 #
 # Write the version of `$NAME` installed to standard output.
 fpf_dpkg_version() {
-	dpkg-query -W -f'${Version}' "$1" 2>"/dev/null" || echo "0"
+	dpkg-query -W -f'${Version}' "$1" 2>"/dev/null" || true
 }
 
 # `fpf_git_commit_tree "$TREE"`
@@ -37,7 +37,7 @@ EOF
 # is written; for example, `foo.bar = baz` is written as `bar = baz` when
 # the prefix `foo.` is given.
 fpf_git_config_prefix() {
-	git config --get-regexp "^$(echo "$1" | sed "s/\\./\\./")" |
+	git config --get-regexp "^$(echo "$1" | sed 's/\./\\./g')" |
 	cut -c"$((${#1} + 1))-" ||
 	true
 }
@@ -108,7 +108,7 @@ fpf_mode() {
 #
 # Write the version of `$NAME` installed to standard output.
 fpf_rpm_version() {
-	rpm --qf="%{VERSION}-%{RELEASE}" -q "$1" 2>"/dev/null" || echo "0"
+	rpm --qf="%{VERSION}-%{RELEASE}" -q "$1" 2>"/dev/null" || true
 }
 
 # `fpf_rpmvercmp "$VERSION1" "$OPERATOR" "$VERSION2"`
@@ -121,7 +121,7 @@ fpf_rpmvercmp() {
 	case "$2" in
 		">=")
 			test "$(
-				echo -e "$1\n$3" | fpf_rpmvercmp_sort | head -n1
+				echo "$1\n$3" | fpf_rpmvercmp_sort | head -n1
 			)" = "$1";;
 		"==")
 			test "$(
