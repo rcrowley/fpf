@@ -78,8 +78,6 @@ trap "tac \"$TMP\" | sh; rm -f \"$TMP\"" EXIT INT TERM
 
 # Install dependencies from system package managers (APT and Yum) if those
 # package managers are present on this system.
-#
-# FIXME In `--no-deps` mode, the second version comparison will fail.
 if which apt-get >"/dev/null" 2>"/dev/null" &&
 which dpkg >"/dev/null" 2>"/dev/null"
 then
@@ -91,7 +89,7 @@ then
 					fpf_dpkg_version "$NAME"
 				)" ge "$VERSION" ||
 				fpf_if_deps sudo apt-get -q -y install "$NAME"
-				dpkg --compare-versions "$(
+				fpf_if_deps -q dpkg --compare-versions "$(
 					fpf_dpkg_version "$NAME"
 				)" ge "$VERSION";;
 			"==") fpf_if_deps sudo apt-get -q -y install "$NAME=$VERSION";;
@@ -107,7 +105,9 @@ then
 			">=")
 				fpf_rpmvercmp "$(fpf_rpm_version "$NAME")" ">=" "$VERSION" ||
 				fpf_if_deps sudo yum install "$NAME"
-				fpf_rpmvercmp "$(fpf_rpm_version "$NAME")" ">=" "$VERSION";;
+				fpf_if_deps -q fpf_rpmvercmp "$(
+					fpf_rpm_version "$NAME"
+				)" ">=" "$VERSION";;
 			"==") fpf_if_deps sudo yum install "$NAME-$VERSION";;
 		esac
 	done
@@ -124,14 +124,18 @@ done
 fpf_git_config_prefix "fpf.gem." | while read NAME OPERATOR VERSION
 do
 	[ "$OPERATOR" != ">=" ] && V="$VERSION" || V=">= $VERSION"
-	gem list -q -v"$V" "$NAME" || fpf_if_deps gem install "$NAME" "$V"
+	gem list -i -q -v"$V" "$NAME" >"/dev/null" ||
+	fpf_if_deps sudo gem install -v"$V" "$NAME"
 done
 fpf_git_config_prefix "fpf.npm." | while read NAME OPERATOR VERSION
 do
+	mkdir -p "$PREFIX/lib"
+	cd "$PREFIX/lib"
 	case "$OPERATOR" in
 		">=") fpf_if_deps npm install "$NAME@>=$VERSION";;
 		"==") fpf_if_deps npm install "$NAME@$VERSION";;
 	esac
+	cd "-"
 done
 fpf_git_config_prefix "fpf.pear." | while read NAME OPERATOR VERSION
 do
@@ -150,8 +154,8 @@ done
 fpf_git_config_prefix "fpf.pip." | while read NAME OPERATOR VERSION
 do
 	case "$OPERATOR" in
-		">=") fpf_if_deps pip install "$NAME";;
-		"==") fpf_if_deps pip install "$NAME==$VERSION";;
+		">=") fpf_if_deps sudo pip install "$NAME";;
+		"==") fpf_if_deps sudo pip install "$NAME==$VERSION";;
 	esac
 done
 

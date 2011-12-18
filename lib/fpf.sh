@@ -89,11 +89,21 @@ fpf_git_write_tree() {
 	} | git hash-object --no-filters --stdin -t"tree" -w
 }
 
-# `fpf_if_deps ...`
+# `fpf_if_deps [-q] ...`
 #
-# Execute the arguments as a command if the global $DEPS = 1.
+# Execute the arguments as a command if the global $DEPS = 1.  If `-q` is
+# given and `$DEPS` is 0, don't write the command that would have been
+# executed to standard output.
 fpf_if_deps() {
-	[ "$DEPS" = 1 ] && eval "$@" || echo "$@"
+	if [ "$1" = "-q" ]
+	then QUIET=1 shift
+	else QUIET=0
+	fi
+	if [ "$DEPS" = 1 ]
+	then "$@"
+	elif [ "$QUIET" = 0 ]
+	then echo "$@"
+	fi
 }
 
 # `fpf_mode "$PATHNAME"`
