@@ -33,12 +33,13 @@ Package metadata is stored via `git-config`(1) in the `fpf` section.  The follow
 * `fpf.name`: package name.
 * `fpf.version`: package version number.  See <http://semver.org>.
 
-Dependency metadata is likewise stored via `git-config`(1) in the `fpf` section.  FPF packages may declare dependencies on packages managed by other package managers, so all dependencies are qualified with their package manager.  For example, the following Git `config` section declares dependencies on `foo` from APT and `bar` from FPF:
+Dependency metadata is likewise stored via `git-config`(1).  FPF packages may declare dependencies on packages managed by other package managers, so all dependencies are qualified with their package manager.  For example, the following Git `config` section declares dependencies on `foo` from APT and `bar` from FPF:
 
-	[fpf "apt"]
-		foo = >= 0.0.0-1
-	[fpf "fpf"]
-		bar = == 0.0.0
+	[apt "foo"]
+		version = 0.0.0-1
+	[fpf "bar"]
+		version = 0.0.0
+		pinned = true
 
 The following package managers are supported; they should be examined in this order during installation:
 
@@ -52,10 +53,7 @@ The following package managers are supported; they should be examined in this or
 8. `pip`
 9. `fpr`
 
-The values of the `git-config`(1) names `fpf.apt.foo` and `fpf.fpf.bar` above may take either of the following forms:
-
-* <code>&gt;= <em>version</em></code>: the minimum version number required to meet the dependency.  Use `0` to accept any version.
-* <code>== <em>version</em></code>: the exact version number required to meet the dependency.
+The values of the `git-config`(1) names `apt.foo.version` and `fpf.bar.version` above specify a version number in the format expected by the associated package manager.  Because `fpf.bar.pinned` is `true`, FPF insists this exact version number be present to satisfy the dependency.
 
 Files and directories in an FPF package may have any access mode, including being `setuid`, `setgid`, `sticky`.  The complete access mode is stored in the Git tree objects in the package and the mode is restored when the package is installed.  Full use of the access mode means that `git-write-tree` and `git-checkout` can't be used directly on the package.
 
@@ -70,10 +68,23 @@ The integrity of an installed package may be verified by `git-status`(1), `git-d
 Quirks
 ------
 
-* As currently specified, dependencies whose name contains an underscore are not allowed.  This is a limitation imposed by `git-config`(1) and requires changing the organization of FPF package metadata.
 * Dependencies managed by APT, Yum, PEAR, and PECL can only be installed system-wide so these packages are installed using `sudo`(8).
 * Dependencies managed by RubyGems and `pip` are currently installed system-wide using `sudo`(8) but this should be made configurable.
 * Dependencies managed by NPM are installed in `$PREFIX/lib/node_modules`.  This may be a horrible idea and needs to be run past a real Node programmer.
+
+TODO
+----
+
+* Make dependencies that weren't already satisfied eligible for rollback.
+* Verifiy that dependencies are satisfied after installing the latest version.
+
+TODONE
+------
+
+* Build packages.
+* Install packages.
+* Check package integrity.
+* Install dependencies.
 
 Related material
 ----------------

@@ -6,6 +6,124 @@ fpf_arch() {
 	rpm --eval "%_arch" 2>"/dev/null"
 }
 
+# `fpf_deps "$MANAGER"`
+#
+# Install all dependencies managed by `$MANAGER`.
+fpf_deps() {
+	git config --get-regexp "^$1\\..+\\.version\$" |
+	while read NAME VERSION
+	do
+		NAME="${NAME#"$1."}"
+		NAME="${NAME%".version"}"
+		if git config "$1.$NAME.pinned" >"/dev/null"
+		then eval "fpf_deps_$1 \"$NAME\" \"$VERSION\" pinned"
+		else eval "fpf_deps_$1 \"$NAME\" \"$VERSION\""
+		fi
+	done
+}
+
+# `fpf_deps_apt "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency with APT.
+fpf_deps_apt() {
+	INST_VERSION="$(fpf_dpkg_version "$1")"
+	if [ "$3" ]
+	then fpf_if_deps sudo apt-get -q -y install "$1=$2"
+	else
+		dpkg --compare-versions "$INST_VERSION" ge "$2" ||
+		fpf_if_deps sudo apt-get -q -y install "$1"
+		fpf_if_deps -q dpkg --compare-versions "$(
+			fpf_dpkg_version "$1"
+		)" ge "$2"
+	fi
+}
+
+# `fpf_deps_yum "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency with Yum.
+fpf_deps_yum() {
+	INST_VERSION="$(fpf_rpm_version "$1")"
+	if [ "$3" ]
+	then fpf_if_deps sudo yum install "$1-$2"
+	else
+		fpf_rpmvercmp "$INST_VERSION" ">=" "$2" ||
+		fpf_if_deps sudo yum install "$1"
+		fpf_if_deps -q fpf_rpmvercmp "$(fpf_rpm_version "$1")" ">=" "$2"
+	fi
+}
+
+# `fpf_deps_cpan "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from CPAN.
+fpf_deps_cpan() {
+	[ "$2" != 0 -o "$3" ] &&
+	echo "fpf: CPAN can only install the latest version" >&2
+	fpf_if_deps cpan install "$1"
+}
+
+# `fpf_deps_gem "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from RubyGems.
+fpf_deps_gem() {
+	[ "$3" ] && V="$2" || V=">= $2"
+	gem list -i -q -v"$V" "$1" >"/dev/null" ||
+	fpf_if_deps sudo gem install -v"$V" "$1"
+}
+
+# `fpf_deps_npm "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from NPM.
+fpf_deps_npm() {
+	mkdir -p "$PREFIX/lib"
+	(
+		cd "$PREFIX/lib"
+		if [ "$3" ]
+		then fpf_if_deps npm install "$1@$2"
+		else fpf_if_deps npm install "$1@>=$2"
+		fi
+	)
+}
+
+# `fpf_deps_pear "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from PEAR.
+fpf_deps_pear() {
+	if [ "$3" ]
+	then fpf_if_deps sudo pear install "$1-$2"
+	else fpf_if_deps sudo pear install "$2"
+	fi
+}
+
+# `fpf_deps_pecl "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from PECL.
+fpf_deps_pecl() {
+	if [ "$3" ]
+	then fpf_if_deps sudo pecl install "$1-$2"
+	else fpf_if_deps sudo pecl install "$1"
+	fi
+}
+
+# `fpf_deps_pip "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from PyPI.
+fpf_deps_pip() {
+	if [ "$3" ]
+	then fpf_if_deps sudo pip install "$1==$2"
+	else fpf_if_deps sudo pip install "$1"
+	fi
+}
+
+# `fpf_deps_fpr "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency with FPR.
+fpf_deps_fpr() {
+	if [ "$3" ]
+	then fpf_if_deps fpr-install --prefix="$PREFIX" -p -v"$2" "$1"
+	else fpf_if_deps fpr-install --prefix="$PREFIX" -v"$2" "$1"
+	fi
+}
+
 # `fpf_dpkg_version "$NAME"`
 #
 # Write the version of `$NAME` installed to standard output.

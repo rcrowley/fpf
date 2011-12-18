@@ -73,100 +73,30 @@ TMP="$(mktemp)"
 echo "rm -rf \"$GIT_DIR\"" >"$TMP"
 trap "tac \"$TMP\" | sh; rm -f \"$TMP\"" EXIT INT TERM
 
-# TODO Make dependencies that weren't already satisfied eligible for rollback.
-# TODO Installing the newest version is not guaranteed to satisfy a dependency.
+{
 
-# Install dependencies from system package managers (APT and Yum) if those
-# package managers are present on this system.
-if which apt-get >"/dev/null" 2>"/dev/null" &&
-which dpkg >"/dev/null" 2>"/dev/null"
-then
-	fpf_git_config_prefix "fpf.apt." | while read NAME OPERATOR VERSION
-	do
-		case "$OPERATOR" in
-			">=")
-				dpkg --compare-versions "$(
-					fpf_dpkg_version "$NAME"
-				)" ge "$VERSION" ||
-				fpf_if_deps sudo apt-get -q -y install "$NAME"
-				fpf_if_deps -q dpkg --compare-versions "$(
-					fpf_dpkg_version "$NAME"
-				)" ge "$VERSION";;
-			"==") fpf_if_deps sudo apt-get -q -y install "$NAME=$VERSION";;
-		esac
-	done 3>>"$TMP"
-fi
-if which yum >"/dev/null" 2>"/dev/null" &&
-which rpm >"/dev/null" 2>"/dev/null"
-then
-	fpf_git_config_prefix "fpf.yum." | while read NAME OPERATOR VERSION
-	do
-		case "$OPERATOR" in
-			">=")
-				fpf_rpmvercmp "$(fpf_rpm_version "$NAME")" ">=" "$VERSION" ||
-				fpf_if_deps sudo yum install "$NAME"
-				fpf_if_deps -q fpf_rpmvercmp "$(
-					fpf_rpm_version "$NAME"
-				)" ">=" "$VERSION";;
-			"==") fpf_if_deps sudo yum install "$NAME-$VERSION";;
-		esac
-	done 3>>"$TMP"
-fi
+	# Install dependencies from system package managers (APT and Yum) if
+	# those package managers are present on this system.
+	if which apt-get dpkg >"/dev/null" 2>"/dev/null"
+	then fpf_deps "apt"
+	fi
+	if which yum rpm >"/dev/null" 2>"/dev/null"
+	then fpf_deps "yum"
+	fi
 
-# Install dependencies from language-level package managers (RubyGems, etc.).
-# These package managers must exist on `$PATH`
-fpf_git_config_prefix "fpf.cpan." | while read NAME OPERATOR VERSION
-do
-	[ "$OPERATOR" != ">=" -a "$VERSION" != 0 ] &&
-	echo "fpf: CPAN can only install the latest version" >&2
-	fpf_if_deps cpan install "$NAME"
-done 3>>"$TMP"
-fpf_git_config_prefix "fpf.gem." | while read NAME OPERATOR VERSION
-do
-	[ "$OPERATOR" != ">=" ] && V="$VERSION" || V=">= $VERSION"
-	gem list -i -q -v"$V" "$NAME" >"/dev/null" ||
-	fpf_if_deps sudo gem install -v"$V" "$NAME"
-done 3>>"$TMP"
-fpf_git_config_prefix "fpf.npm." | while read NAME OPERATOR VERSION
-do
-	mkdir -p "$PREFIX/lib"
-	cd "$PREFIX/lib"
-	case "$OPERATOR" in
-		">=") fpf_if_deps npm install "$NAME@>=$VERSION";;
-		"==") fpf_if_deps npm install "$NAME@$VERSION";;
-	esac
-	cd "-"
-done 3>>"$TMP"
-fpf_git_config_prefix "fpf.pear." | while read NAME OPERATOR VERSION
-do
-	case "$OPERATOR" in
-		">=") fpf_if_deps sudo pear install "$NAME";;
-		"==") fpf_if_deps sudo pear install "$NAME-$VERSION";;
-	esac
-done 3>>"$TMP"
-fpf_git_config_prefix "fpf.pecl." | while read NAME OPERATOR VERSION
-do
-	case "$OPERATOR" in
-		">=") fpf_if_deps sudo pecl install "$NAME";;
-		"==") fpf_if_deps sudo pecl install "$NAME-$VERSION";;
-	esac
-done 3>>"$TMP"
-fpf_git_config_prefix "fpf.pip." | while read NAME OPERATOR VERSION
-do
-	case "$OPERATOR" in
-		">=") fpf_if_deps sudo pip install "$NAME";;
-		"==") fpf_if_deps sudo pip install "$NAME==$VERSION";;
-	esac
-done 3>>"$TMP"
+	# Install dependencies from language-level package managers (RubyGems,
+	# etc.).  These package managers must exist on `$PATH`
+	fpf_deps "cpan"
+	fpf_deps "gem"
+	fpf_deps "npm"
+	fpf_deps "pear"
+	fpf_deps "pecl"
+	fpf_deps "pip"
 
-# Install dependencies from FPR, the APT to FPF's dpkg.
-fpf_git_config_prefix "fpf.fpr." | while read NAME OPERATOR VERSION
-do
-	case "$OPERATOR" in
-		">=") fpf_if_deps fpr-install --prefix="$PREFIX" -m"$VERSION" "$NAME";;
-		"==") fpf_if_deps fpr-install --prefix="$PREFIX" -v"$VERSION" "$NAME";;
-	esac
-done 3>>"$TMP"
+	# Install dependencies from FPR, the APT to FPF's dpkg.
+	fpf_deps "fpr"
+
+} 3>>"$TMP"
 
 # Checkout a woring copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.
