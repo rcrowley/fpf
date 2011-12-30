@@ -1,0 +1,45 @@
+#!/bin/sh
+
+#/ Usage: fpf-satisfy-deps [--prefix=<prefix>] <name>
+#/   --prefix=<prefix> installation prefix
+#/   <name>            package name
+
+set -e
+
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
+# The default prefix is the one in which the FPF tools are installed.
+PREFIX="$(dirname "$(dirname "$0")")"
+
+usage() {
+	grep "^#/" "$0" | cut -c"4-" >&2
+	exit "$1"
+}
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		--prefix) PREFIX="$2" shift 2;;
+		--prefix=*) PREFIX="$(echo "$1" | cut -c"10-")" shift;;
+		-h|--help) usage 0;;
+		-*) usage 1;;
+		*) break;;
+	esac
+done
+NAME="$1"
+[ -z "$PREFIX" -o -z "$NAME" ] && usage 1
+
+# It's critical that the prefix be fully-qualified or Git will lose track
+# of itself by changing its working directory.
+PREFIX="$(cd "$PREFIX" && pwd)"
+
+# Verify that the package is in FPF's library directory.  Since satisfying
+# dependencies only requires metadata, it doesn't actually need to be fully
+# installed.  Export `GIT_DIR` for subsequent `git`(1) commands.
+export GIT_DIR="$PREFIX/lib/fpf/$NAME.git"
+if [ ! -d "$GIT_DIR" ]
+then echo "fpf: $NAME is not installed" >&2 && exit 1
+fi
+
+fpf_txn_begin
+
+fpf_txn_commit

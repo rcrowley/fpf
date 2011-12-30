@@ -1,28 +1,9 @@
-_FPF_APT_INSTALL=""
-_FPF_APT_INSTALL_PINNED=""
-
 # `fpf_arch`
 #
 # Write the architecture of this system to standard output.
 fpf_arch() {
 	dpkg --print-architecture 2>"/dev/null" ||
 	rpm --eval "%_arch" 2>"/dev/null"
-}
-
-# `fpf_deps "$MANAGER"`
-#
-# Install all dependencies managed by `$MANAGER`.
-fpf_deps() {
-	git config --get-regexp "^$1\\..+\\.version\$" |
-	while read NAME VERSION
-	do
-		NAME="${NAME#"$1."}"
-		NAME="${NAME%".version"}"
-		if git config "$1.$NAME.pinned" >"/dev/null"
-		then eval "fpf_deps_${1}_${2} \"$NAME\" \"$VERSION\" pinned"
-		else eval "fpf_deps_${1}_${2} \"$NAME\" \"$VERSION\""
-		fi
-	done
 }
 
 # `fpf_deps_apt_install "$NAME" "$VERSION" "$PINNED"`
@@ -302,4 +283,23 @@ fpf_rpmvercmp_sort() {
 	done |
 	sort -r -k"2" |
 	cut -d" " -f"1"
+}
+
+# `fpf_txn_begin`
+#
+# Initialize a new transaction rollback log, the name of which is stored in
+# `ROLLBACK`, and a trap that executes the rollback log in reverse order when
+# the process exits.
+fpf_txn_begin() {
+	TXN_LOG="$(mktemp)"
+	trap "tac \"$TXN_LOG\" | sh; rm -f \"$TXN_LOG\"" EXIT INT TERM
+}
+
+# `fpf_txn_commit`
+#
+# Commit the transaction by truncating the rollback log so that nothing is
+# rolled back when the process exits.
+fpf_txn_commit() {
+	cat "$TXN_LOG"
+	truncate -s"0" "$TXN_LOG"
 }
