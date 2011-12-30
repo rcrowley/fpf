@@ -70,13 +70,16 @@ Quirks
 
 * Dependencies managed by APT, Yum, PEAR, and PECL can only be installed system-wide so these packages are installed using `sudo`(8).
 * Dependencies managed by RubyGems and `pip` are currently installed system-wide using `sudo`(8) but this should be made configurable.
-* Dependencies managed by NPM are installed in `$PREFIX/lib/node_modules`.  This may be a horrible idea and needs to be run past a real Node programmer.
+* Dependencies managed by NPM are installed in `$PREFIX/lib/node_modules`.  This may be a horrible idea.
 
 TODO
 ----
 
 * Make dependencies that weren't already satisfied eligible for rollback.
 * Verifiy that dependencies are satisfied after installing the latest version.
+* Decide how to allow RubyGems and `pip` to run as a normal user.
+* Consult with a real Node user about `$PREFIX/lib/node_modules`.
+* Give two shits (one shit each) about PEAR/PECL.
 
 TODONE
 ------

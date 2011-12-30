@@ -1,3 +1,6 @@
+_FPF_APT_INSTALL=""
+_FPF_APT_INSTALL_PINNED=""
+
 # `fpf_arch`
 #
 # Write the architecture of this system to standard output.
@@ -16,21 +19,33 @@ fpf_deps() {
 		NAME="${NAME#"$1."}"
 		NAME="${NAME%".version"}"
 		if git config "$1.$NAME.pinned" >"/dev/null"
-		then eval "fpf_deps_$1 \"$NAME\" \"$VERSION\" pinned"
-		else eval "fpf_deps_$1 \"$NAME\" \"$VERSION\""
+		then eval "fpf_deps_${1}_${2} \"$NAME\" \"$VERSION\" pinned"
+		else eval "fpf_deps_${1}_${2} \"$NAME\" \"$VERSION\""
 		fi
 	done
 }
 
-# `fpf_deps_apt "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_apt_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency with APT.
-fpf_deps_apt() {
-	INST_VERSION="$(fpf_dpkg_version "$1")"
+fpf_deps_apt_install() {
+
+	# Add a command that restores the installed version or removed the
+	# package entirely to the rollback log.
+	ROLLBACK_VERSION="$(fpf_dpkg_version "$1")"
+	if [ "$ROLLBACK_VERSION" ]
+	then echo "sudo apt-get -q -y install \"$1=$ROLLBACK_VERSION\""
+	else echo "sudo apt-get -q -y remove \"$1\""
+	fi >&3
+
+	# Also note the installed version more permanently so `fpf-remove`(1)
+	# has something to shoot for.
+	git config "apt.$1.rollback-version" "$ROLLBACK_VERSION"
+
 	if [ "$3" ]
 	then fpf_if_deps sudo apt-get -q -y install "$1=$2"
 	else
-		dpkg --compare-versions "$INST_VERSION" ge "$2" ||
+		dpkg --compare-versions "$ROLLBACK_VERSION" ge "$2" ||
 		fpf_if_deps sudo apt-get -q -y install "$1"
 		fpf_if_deps -q dpkg --compare-versions "$(
 			fpf_dpkg_version "$1"
@@ -38,10 +53,21 @@ fpf_deps_apt() {
 	fi
 }
 
-# `fpf_deps_yum "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_apt_remove "$NAME"`
+#
+# TODO
+fpf_deps_apt_remove() {
+	ROLLBACK_VERSION="$(git config "apt.$1.rollback-version" || true)"
+	if [ "$ROLLBACK_VERSION" ]
+	then sudo apt-get -q -y install "$1=$ROLLBACK_VERSION"
+	else sudo apt-get -q -y remove "$1"
+	fi >&3
+}
+
+# `fpf_deps_yum_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency with Yum.
-fpf_deps_yum() {
+fpf_deps_yum_install() {
 	INST_VERSION="$(fpf_rpm_version "$1")"
 	if [ "$3" ]
 	then fpf_if_deps sudo yum install "$1-$2"
@@ -52,28 +78,28 @@ fpf_deps_yum() {
 	fi
 }
 
-# `fpf_deps_cpan "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_cpan_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from CPAN.
-fpf_deps_cpan() {
+fpf_deps_cpan_install() {
 	[ "$2" != 0 -o "$3" ] &&
 	echo "fpf: CPAN can only install the latest version" >&2
 	fpf_if_deps cpan install "$1"
 }
 
-# `fpf_deps_gem "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_gem_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from RubyGems.
-fpf_deps_gem() {
+fpf_deps_gem_install() {
 	[ "$3" ] && V="$2" || V=">= $2"
 	gem list -i -q -v"$V" "$1" >"/dev/null" ||
 	fpf_if_deps sudo gem install -v"$V" "$1"
 }
 
-# `fpf_deps_npm "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_npm_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from NPM.
-fpf_deps_npm() {
+fpf_deps_npm_install() {
 	mkdir -p "$PREFIX/lib"
 	(
 		cd "$PREFIX/lib"
@@ -84,40 +110,40 @@ fpf_deps_npm() {
 	)
 }
 
-# `fpf_deps_pear "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_pear_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from PEAR.
-fpf_deps_pear() {
+fpf_deps_pear_install() {
 	if [ "$3" ]
 	then fpf_if_deps sudo pear install "$1-$2"
 	else fpf_if_deps sudo pear install "$2"
 	fi
 }
 
-# `fpf_deps_pecl "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_pecl_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from PECL.
-fpf_deps_pecl() {
+fpf_deps_pecl_install() {
 	if [ "$3" ]
 	then fpf_if_deps sudo pecl install "$1-$2"
 	else fpf_if_deps sudo pecl install "$1"
 	fi
 }
 
-# `fpf_deps_pip "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_pip_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from PyPI.
-fpf_deps_pip() {
+fpf_deps_pip_install() {
 	if [ "$3" ]
 	then fpf_if_deps sudo pip install "$1==$2"
 	else fpf_if_deps sudo pip install "$1"
 	fi
 }
 
-# `fpf_deps_fpr "$NAME" "$VERSION" "$PINNED"`
+# `fpf_deps_fpr_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency with FPR.
-fpf_deps_fpr() {
+fpf_deps_fpr_install() {
 	if [ "$3" ]
 	then fpf_if_deps fpr-install --prefix="$PREFIX" -p -v"$2" "$1"
 	else fpf_if_deps fpr-install --prefix="$PREFIX" -v"$2" "$1"
@@ -197,8 +223,8 @@ fpf_git_write_tree() {
 
 # `fpf_if_deps [-q] ...`
 #
-# Execute the arguments as a command if the global $DEPS = 1.  If `-q` is
-# given and `$DEPS` is 0, don't write the command that would have been
+# Execute the arguments as a command if the global `$DEPS` = 1.  If `-q`
+# is given and `$DEPS` is 0, don't write the command that would have been
 # executed to standard output.
 fpf_if_deps() {
 	if [ "$1" = "-q" ]
@@ -235,10 +261,7 @@ fpf_rpm_version() {
 # See also: <http://fedoraproject.org/wiki/Tools/RPM/VersionComparison>
 fpf_rpmvercmp() {
 	case "$2" in
-		">=")
-			test "$(
-				echo "$1\n$3" | fpf_rpmvercmp_sort | head -n1
-			)" = "$1";;
+		">=") test "$(echo "$1\n$3" | fpf_rpmvercmp_sort | head -n1)" = "$1";;
 		"==")
 			test "$(
 				echo "$1" | _fpf_rpmvercmp_sed

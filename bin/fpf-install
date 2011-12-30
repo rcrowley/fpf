@@ -9,7 +9,7 @@ set -e
 
 . "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
-# The default is to manage dependencies.
+# The default when installing is to manage dependencies.
 DEPS=1
 
 # The default prefix is the one in which the FPF tools are installed.
@@ -80,30 +80,30 @@ trap "tac \"$ROLLBACK\" | sh; rm -f \"$ROLLBACK\"" EXIT INT TERM
 	# Install dependencies from system package managers (APT and Yum) if
 	# those package managers are present on this system.
 	if which apt-get dpkg >"/dev/null" 2>"/dev/null"
-	then fpf_deps "apt"
+	then fpf_deps apt install
 	fi
 	if which yum rpm >"/dev/null" 2>"/dev/null"
-	then fpf_deps "yum"
+	then fpf_deps yum install
 	fi
 
 	# Install dependencies from language-level package managers (RubyGems,
 	# etc.).  These package managers must exist on `$PATH`
-	fpf_deps "cpan"
-	fpf_deps "gem"
-	fpf_deps "npm"
-	fpf_deps "pear"
-	fpf_deps "pecl"
-	fpf_deps "pip"
+	fpf_deps cpan install
+	fpf_deps gem install
+	fpf_deps npm install
+	fpf_deps pear install
+	fpf_deps pecl install
+	fpf_deps pip install
 
 	# Install dependencies from FPR, the APT to FPF's dpkg.
-	fpf_deps "fpr"
+	fpf_deps fpr install
 
 } 3>>"$ROLLBACK"
 
 # Checkout a woring copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.
-# Files must not exist or the installation will be rolled back.  Each file
-# and directory created are added to the rollback log.
+# Files must not exist or the installation will be rolled back.  Add each file
+# and directory created to the rollback log.
 COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n"1")"
 fpf_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
