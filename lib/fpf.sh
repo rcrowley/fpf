@@ -8,21 +8,15 @@ fpf_arch() {
 
 # `fpf_deps_apt_install "$NAME" "$VERSION" "$PINNED"`
 #
-# Install a dependency with APT.
+# Install a dependency with APT.  Add rollback instructions to the transaction
+# log and to `git-config`(1) for `fpf-remove`.
 fpf_deps_apt_install() {
-
-	# Add a command that restores the installed version or removed the
-	# package entirely to the rollback log.
 	ROLLBACK_VERSION="$(fpf_dpkg_version "$1")"
 	if [ "$ROLLBACK_VERSION" ]
 	then echo "sudo apt-get -q -y install \"$1=$ROLLBACK_VERSION\""
 	else echo "sudo apt-get -q -y remove \"$1\""
 	fi >&3
-
-	# Also note the installed version more permanently so `fpf-remove`(1)
-	# has something to shoot for.
 	git config "apt.$1.rollback-version" "$ROLLBACK_VERSION"
-
 	if [ "$3" ]
 	then fpf_if_deps sudo apt-get -q -y install "$1=$2"
 	else
@@ -49,11 +43,15 @@ fpf_deps_apt_remove() {
 #
 # Install a dependency with Yum.
 fpf_deps_yum_install() {
-	INST_VERSION="$(fpf_rpm_version "$1")"
+	ROLLBACK_VERSION="$(fpf_rpm_version "$1")"
+	if [ "$ROLLBACK_VERSION" ]
+	then echo "sudo yum -q -y install \"$1-$ROLLBACK_VERSION\""
+	else echo "sudo yum -q -y remove \"$1\""
+	fi >&3
 	if [ "$3" ]
 	then fpf_if_deps sudo yum install "$1-$2"
 	else
-		fpf_rpmvercmp "$INST_VERSION" ">=" "$2" ||
+		fpf_rpmvercmp "$ROLLBACK_VERSION" ">=" "$2" ||
 		fpf_if_deps sudo yum install "$1"
 		fpf_if_deps -q fpf_rpmvercmp "$(fpf_rpm_version "$1")" ">=" "$2"
 	fi
@@ -95,19 +93,30 @@ fpf_deps_npm_install() {
 #
 # Install a dependency from PEAR.
 fpf_deps_pear_install() {
-	if [ "$3" ]
-	then fpf_if_deps sudo pear install "$1-$2"
-	else fpf_if_deps sudo pear install "$2"
-	fi
+	fpf_deps_php_install "pear" "$1" "$2" "$3"
 }
 
 # `fpf_deps_pecl_install "$NAME" "$VERSION" "$PINNED"`
 #
 # Install a dependency from PECL.
 fpf_deps_pecl_install() {
-	if [ "$3" ]
-	then fpf_if_deps sudo pecl install "$1-$2"
-	else fpf_if_deps sudo pecl install "$1"
+	fpf_deps_php_install "pecl" "$1" "$2" "$3"
+}
+
+# `fpf_deps_php_install "$PROGNAME" "$NAME" "$VERSION" "$PINNED"`
+#
+# Install a dependency from PEAR or PECL.
+fpf_deps_php_install() {
+	echo "sudo \"$1\" uninstall \"$2\"" >&3
+	ROLLBACK_VERSION="$(
+		sudo "$1" info "$2" | grep "^Release Version" | awk '{print $3}'
+	)"
+	if [ "$ROLLBACK_VERSION" ]
+	then echo "sudo "$1" install \"$2-$ROLLBACK_VERSION\""
+	fi >&3
+	if [ "$4" ]
+	then fpf_if_deps sudo "$1" install "$2-$3"
+	else fpf_if_deps sudo "$1" install "$2"
 	fi
 }
 
@@ -115,9 +124,14 @@ fpf_deps_pecl_install() {
 #
 # Install a dependency from PyPI.
 fpf_deps_pip_install() {
+	ROLLBACK_VERSION="$(sudo pip freeze | grep "^$1" | cut -d"=" -f"3")"
+	if [ "$ROLLBACK_VERSION" ]
+	then echo "sudo pip install \"$1==$ROLLBACK_VERSION\""
+	else echo "sudo uninstall \"$1\""
+	fi >&3
 	if [ "$3" ]
 	then fpf_if_deps sudo pip install "$1==$2"
-	else fpf_if_deps sudo pip install "$1"
+	else fpf_if_deps sudo pip install "$1>=$2"
 	fi
 }
 
@@ -125,6 +139,11 @@ fpf_deps_pip_install() {
 #
 # Install a dependency with FPR.
 fpf_deps_fpr_install() {
+	echo "fpr-remove \"$1\"" >&3
+	ROLLBACK_VERSION="$(git config "fpf.version")"
+	if [ "$ROLLBACK_VERSION" ]
+	then echo "fpr-install -v\"$ROLLBACK_VERSION\" \"$1\""
+	fi >&3
 	if [ "$3" ]
 	then fpf_if_deps fpr-install --prefix="$PREFIX" -p -v"$2" "$1"
 	else fpf_if_deps fpr-install --prefix="$PREFIX" -v"$2" "$1"

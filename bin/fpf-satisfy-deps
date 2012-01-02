@@ -42,4 +42,10 @@ fi
 
 fpf_txn_begin
 
+$(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME" |
+while read MANAGER PACKAGE VERSION PINNED
+do
+	fpf_deps_${MANAGER}_install "$PACKAGE" "$VERSION" "$PINNED"
+done
+
 fpf_txn_commit

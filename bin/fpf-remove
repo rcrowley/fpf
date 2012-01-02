@@ -10,7 +10,7 @@ set -e
 . "$(dirname "$(dirname "$0")")/lib/fpf.sh"
 
 # The default when removing is *not* to manage dependencies.
-DEPS=1
+DEPS=0
 
 # The default prefix is the one in which the FPF tools are installed.
 PREFIX="$(dirname "$(dirname "$0")")"
