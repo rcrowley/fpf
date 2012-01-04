@@ -64,9 +64,9 @@ do
 				sudo "$MANAGER" uninstall "$PACKAGE"
 				sudo "$MANAGER" install "$PACKAGE-$ROLLBACK_VERSION";;
 			"pip") sudo pip install "$PACKAGE==$ROLLBACK_VERSION";;
-			"fpr")
-				fpr-remove --prefix="$PREFIX" "$PACKAGE"
-				fpr-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+			"fpa")
+				fpa-remove --prefix="$PREFIX" "$PACKAGE"
+				fpa-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
 		esac
 	else
 		case "$MANAGER" in
@@ -77,7 +77,7 @@ do
 			"npm") ;; # TODO
 			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
 			"pip") yes y | sudo pip uninstall "$PACKAGE";;
-			"fpr") fpr-remove --prefix="$PREFIX" "$PACKAGE";;
+			"fpa") fpa-remove --prefix="$PREFIX" "$PACKAGE";;
 		esac
 	fi
 done

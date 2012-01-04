@@ -54,7 +54,7 @@ do
 			grep "^Release Version" |
 			awk '{print $3}';;
 		"pip") sudo pip freeze | grep "^$PACKAGE" | cut -d"=" -f"3";;
-		"fpr") git --git-dir="$PREFIX/lib/$PACKAGE.git" config "fpf.version";;
+		"fpa") git --git-dir="$PREFIX/lib/$PACKAGE.git" config "fpf.version";;
 	esac)"
 	if [ "$PINNED" ]
 	then
@@ -72,7 +72,7 @@ do
 				(cd "$PREFIX/lib" && npm install "$PACKAGE@$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" install "$PACKAGE-$VERSION";;
 			"pip") sudo pip install "$PACKAGE==$VERSION";;
-			"fpr") fpr-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+			"fpa") fpa-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
 		esac
 	else
 		case "$MANAGER" in
@@ -87,7 +87,7 @@ do
 				(cd "$PREFIX/lib" && npm install "$PACKAGE@>=$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
 			"pip") sudo pip install "$PACKAGE";;
-			"fpr") fpr-install --prefix="$PREFIX" "$PACKAGE";;
+			"fpa") fpa-install --prefix="$PREFIX" "$PACKAGE";;
 		esac
 	fi
 done

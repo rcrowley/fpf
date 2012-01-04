@@ -8,7 +8,7 @@ The plan
 
 1. FPF specification.
 2. `fpf-build`, `fpf-install`, `fpf-check`, and `fpf-remove`.
-3. [FPR specification](https://github.com/rcrowley/fpr) and [Freight](https://github.com/rcrowley/freight) integration.
+3. [FPA specification](https://github.com/rcrowley/fpa) and [Freight](https://github.com/rcrowley/freight) integration.
 4. [`fpm`](https://github.com/jordansissel/fpm) integration.
 
 Unfeatures
@@ -51,7 +51,7 @@ The following package managers are supported; they should be examined in this or
 6. `pear`
 7. `pecl`
 8. `pip`
-9. `fpr`
+9. `fpa`
 
 The values of the `git-config`(1) names `apt.foo.version` and `fpf.bar.version` above specify a version number in the format expected by the associated package manager.  Because `fpf.bar.pinned` is `true`, FPF insists this exact version number be present to satisfy the dependency.
 

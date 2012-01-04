@@ -54,7 +54,7 @@ fi
 	echo "pear"
 	echo "pecl"
 	echo "pip"
-	echo "fpr"
+	echo "fpa"
 } |
 
 # Write the manager, name, version, and pinnedness of each dependency to
