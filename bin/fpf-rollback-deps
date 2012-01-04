@@ -40,6 +40,44 @@ if [ ! -d "$GIT_DIR" ]
 then echo "fpf: $NAME is not installed" >&2 && exit 1
 fi
 
-fpf_txn_begin
+$(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME" |
+tac |
+while read MANAGER PACKAGE VERSION PINNED
+do
 
-fpf_txn_commit
+	# Only dependencies that specify a rollback-version (even if it's the
+	# empty string) are eligible for rollback.
+	git config "$MANAGER.$PACKAGE.rollback-version" || continue
+
+	ROLLBACK_VERSION="$(git config "$MANAGER.$PACKAGE.rollback-version")"
+	if [ "$ROLLBACK_VERSION" ]
+	then
+		case "$MANAGER" in
+			"apt") sudo apt-get -y install "$PACKAGE=$ROLLBACK_VERSION";;
+			"yum") sudo yum -y install "$PACKAGE-$ROLLBACK_VERSION";;
+			"cpan") echo "fpf: CPAN can't remove modules" >&2;;
+			"gem")
+				yes y | sudo gem uninstall -a "$PACKAGE"
+				sudo gem install -v"$ROLLBACK_VERSION" "$PACKAGE";;
+			"npm") ;; # TODO
+			"pear"|"pecl")
+				sudo "$MANAGER" uninstall "$PACKAGE"
+				sudo "$MANAGER" install "$PACKAGE-$ROLLBACK_VERSION";;
+			"pip") sudo pip install "$PACKAGE==$ROLLBACK_VERSION";;
+			"fpr")
+				fpr-remove --prefix="$PREFIX" "$PACKAGE"
+				fpr-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+		esac
+	else
+		case "$MANAGER" in
+			"apt") sudo apt-get -y remove "$PACKAGE";;
+			"yum") sudo yum -y remove "$PACKAGE";;
+			"cpan") echo "fpf: CPAN can't remove modules" >&2;;
+			"gem") yes y | sudo gem uninstall -a "$PACKAGE";;
+			"npm") ;; # TODO
+			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
+			"pip") yes y | sudo pip uninstall "$PACKAGE";;
+			"fpr") fpr-remove --prefix="$PREFIX" "$PACKAGE";;
+		esac
+	fi
+done

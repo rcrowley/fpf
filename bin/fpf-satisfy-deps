@@ -40,12 +40,54 @@ if [ ! -d "$GIT_DIR" ]
 then echo "fpf: $NAME is not installed" >&2 && exit 1
 fi
 
-fpf_txn_begin
-
 $(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME" |
 while read MANAGER PACKAGE VERSION PINNED
 do
-	fpf_deps_${MANAGER}_install "$PACKAGE" "$VERSION" "$PINNED"
+	git config "$MANAGER.$PACKAGE.rollback-version" "$(case "$MANAGER" in
+		"apt") fpf_dpkg_version "$PACKAGE";;
+		"yum") fpf_rpm_version "$PACKAGE";;
+		"cpan") echo "fpf: CPAN has no idea what version is installed" >&2;;
+		"gem") sudo gem list "$PACKAGE" | awk -F"[(),]" '{print $2}';;
+		"npm") npm ls | grep "^└── $PACKAGE@" | cut -d"@" -f"2";;
+		"pear"|"pecl")
+			sudo "$MANAGER" info "$PACKAGE" |
+			grep "^Release Version" |
+			awk '{print $3}';;
+		"pip") sudo pip freeze | grep "^$PACKAGE" | cut -d"=" -f"3";;
+		"fpr") git --git-dir="$PREFIX/lib/$PACKAGE.git" config "fpf.version";;
+	esac)"
+	if [ "$PINNED" ]
+	then
+		case "$MANAGER" in
+			"apt") sudo apt-get -y install "$PACKAGE=$VERSION";;
+			"yum") sudo yum -y install "$PACKAGE-$VERSION";;
+			"cpan")
+				echo "fpf: CPAN can only install the latest version" >&2
+				cpan install "$PACKAGE";;
+			"gem")
+				gem list -i -q -v"$VERSION" "$PACKAGE" >"/dev/null" ||
+				sudo gem install -v"$VERSION" "$PACKAGE";;
+			"npm")
+				mkdir -p "$PREFIX/lib"
+				(cd "$PREFIX/lib" && npm install "$PACKAGE@$VERSION");;
+			"pear"|"pecl") sudo "$MANAGER" install "$PACKAGE-$VERSION";;
+			"pip") sudo pip install "$PACKAGE==$VERSION";;
+			"fpr") fpr-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+		esac
+	else
+		case "$MANAGER" in
+			"apt") sudo apt-get -y install "$PACKAGE";;
+			"yum") sudo yum -y install "$PACKAGE";;
+			"cpan") cpan install "$PACKAGE";;
+			"gem")
+				gem list -i -q -v">= $VERSION" "$PACKAGE" >"/dev/null" ||
+				sudo gem install -v">= $VERSION" "$PACKAGE";;
+			"npm")
+				mkdir -p "$PREFIX/lib"
+				(cd "$PREFIX/lib" && npm install "$PACKAGE@>=$VERSION");;
+			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
+			"pip") sudo pip install "$PACKAGE";;
+			"fpr") fpr-install --prefix="$PREFIX" "$PACKAGE";;
+		esac
+	fi
 done
-
-fpf_txn_commit

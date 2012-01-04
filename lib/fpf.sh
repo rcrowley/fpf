@@ -6,150 +6,6 @@ fpf_arch() {
 	rpm --eval "%_arch" 2>"/dev/null"
 }
 
-# `fpf_deps_apt_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency with APT.  Add rollback instructions to the transaction
-# log and to `git-config`(1) for `fpf-remove`.
-fpf_deps_apt_install() {
-	ROLLBACK_VERSION="$(fpf_dpkg_version "$1")"
-	if [ "$ROLLBACK_VERSION" ]
-	then echo "sudo apt-get -q -y install \"$1=$ROLLBACK_VERSION\""
-	else echo "sudo apt-get -q -y remove \"$1\""
-	fi >&3
-	git config "apt.$1.rollback-version" "$ROLLBACK_VERSION"
-	if [ "$3" ]
-	then fpf_if_deps sudo apt-get -q -y install "$1=$2"
-	else
-		dpkg --compare-versions "$ROLLBACK_VERSION" ge "$2" ||
-		fpf_if_deps sudo apt-get -q -y install "$1"
-		fpf_if_deps -q dpkg --compare-versions "$(
-			fpf_dpkg_version "$1"
-		)" ge "$2"
-	fi
-}
-
-# `fpf_deps_apt_remove "$NAME"`
-#
-# TODO
-fpf_deps_apt_remove() {
-	ROLLBACK_VERSION="$(git config "apt.$1.rollback-version" || true)"
-	if [ "$ROLLBACK_VERSION" ]
-	then sudo apt-get -q -y install "$1=$ROLLBACK_VERSION"
-	else sudo apt-get -q -y remove "$1"
-	fi >&3
-}
-
-# `fpf_deps_yum_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency with Yum.
-fpf_deps_yum_install() {
-	ROLLBACK_VERSION="$(fpf_rpm_version "$1")"
-	if [ "$ROLLBACK_VERSION" ]
-	then echo "sudo yum -q -y install \"$1-$ROLLBACK_VERSION\""
-	else echo "sudo yum -q -y remove \"$1\""
-	fi >&3
-	if [ "$3" ]
-	then fpf_if_deps sudo yum install "$1-$2"
-	else
-		fpf_rpmvercmp "$ROLLBACK_VERSION" ">=" "$2" ||
-		fpf_if_deps sudo yum install "$1"
-		fpf_if_deps -q fpf_rpmvercmp "$(fpf_rpm_version "$1")" ">=" "$2"
-	fi
-}
-
-# `fpf_deps_cpan_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from CPAN.
-fpf_deps_cpan_install() {
-	[ "$2" != 0 -o "$3" ] &&
-	echo "fpf: CPAN can only install the latest version" >&2
-	fpf_if_deps cpan install "$1"
-}
-
-# `fpf_deps_gem_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from RubyGems.
-fpf_deps_gem_install() {
-	[ "$3" ] && V="$2" || V=">= $2"
-	gem list -i -q -v"$V" "$1" >"/dev/null" ||
-	fpf_if_deps sudo gem install -v"$V" "$1"
-}
-
-# `fpf_deps_npm_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from NPM.
-fpf_deps_npm_install() {
-	mkdir -p "$PREFIX/lib"
-	(
-		cd "$PREFIX/lib"
-		if [ "$3" ]
-		then fpf_if_deps npm install "$1@$2"
-		else fpf_if_deps npm install "$1@>=$2"
-		fi
-	)
-}
-
-# `fpf_deps_pear_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from PEAR.
-fpf_deps_pear_install() {
-	fpf_deps_php_install "pear" "$1" "$2" "$3"
-}
-
-# `fpf_deps_pecl_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from PECL.
-fpf_deps_pecl_install() {
-	fpf_deps_php_install "pecl" "$1" "$2" "$3"
-}
-
-# `fpf_deps_php_install "$PROGNAME" "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from PEAR or PECL.
-fpf_deps_php_install() {
-	echo "sudo \"$1\" uninstall \"$2\"" >&3
-	ROLLBACK_VERSION="$(
-		sudo "$1" info "$2" | grep "^Release Version" | awk '{print $3}'
-	)"
-	if [ "$ROLLBACK_VERSION" ]
-	then echo "sudo "$1" install \"$2-$ROLLBACK_VERSION\""
-	fi >&3
-	if [ "$4" ]
-	then fpf_if_deps sudo "$1" install "$2-$3"
-	else fpf_if_deps sudo "$1" install "$2"
-	fi
-}
-
-# `fpf_deps_pip_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency from PyPI.
-fpf_deps_pip_install() {
-	ROLLBACK_VERSION="$(sudo pip freeze | grep "^$1" | cut -d"=" -f"3")"
-	if [ "$ROLLBACK_VERSION" ]
-	then echo "sudo pip install \"$1==$ROLLBACK_VERSION\""
-	else echo "sudo uninstall \"$1\""
-	fi >&3
-	if [ "$3" ]
-	then fpf_if_deps sudo pip install "$1==$2"
-	else fpf_if_deps sudo pip install "$1>=$2"
-	fi
-}
-
-# `fpf_deps_fpr_install "$NAME" "$VERSION" "$PINNED"`
-#
-# Install a dependency with FPR.
-fpf_deps_fpr_install() {
-	echo "fpr-remove \"$1\"" >&3
-	ROLLBACK_VERSION="$(git config "fpf.version")"
-	if [ "$ROLLBACK_VERSION" ]
-	then echo "fpr-install -v\"$ROLLBACK_VERSION\" \"$1\""
-	fi >&3
-	if [ "$3" ]
-	then fpf_if_deps fpr-install --prefix="$PREFIX" -p -v"$2" "$1"
-	else fpf_if_deps fpr-install --prefix="$PREFIX" -v"$2" "$1"
-	fi
-}
-
 # `fpf_dpkg_version "$NAME"`
 #
 # Write the version of `$NAME` installed to standard output.
@@ -219,23 +75,6 @@ fpf_git_write_tree() {
 			)"
 		done
 	} | git hash-object --no-filters --stdin -t"tree" -w
-}
-
-# `fpf_if_deps [-q] ...`
-#
-# Execute the arguments as a command if the global `$DEPS` = 1.  If `-q`
-# is given and `$DEPS` is 0, don't write the command that would have been
-# executed to standard output.
-fpf_if_deps() {
-	if [ "$1" = "-q" ]
-	then QUIET=1 shift
-	else QUIET=0
-	fi
-	if [ "$DEPS" = 1 ]
-	then "$@"
-	elif [ "$QUIET" = 0 ]
-	then echo "$@"
-	fi
 }
 
 # `fpf_mode "$PATHNAME"`
@@ -319,6 +158,5 @@ fpf_txn_begin() {
 # Commit the transaction by truncating the rollback log so that nothing is
 # rolled back when the process exits.
 fpf_txn_commit() {
-	cat "$TXN_LOG"
 	truncate -s"0" "$TXN_LOG"
 }

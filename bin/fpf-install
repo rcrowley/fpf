@@ -72,10 +72,18 @@ mv "$TMP" "$GIT_DIR"
 fpf_txn_begin
 echo "rm -rf \"$GIT_DIR\"" >>"$TXN_LOG"
 
-# Install dependencies.  This handles its own rollback internally so the only
-# consideration here is to rollback all dependencies if something later fails.
-$(dirname "$0")/fpf-satisfy-deps --prefix="$PREFIX" "$NAME"
-echo "$(dirname "$0")/fpf-rollback-deps --prefix=\"$PREFIX\" \"$NAME\"" >>"$TXN_LOG"
+# Install dependencies, if requested, or at least list them.  This handles
+# its own rollback internally so the only consideration here is to rollback
+# all dependencies if something later fails.
+if [ "$DEPS" = 1 ]
+then
+	echo "$(dirname "$0")/fpf-rollback-deps --prefix=\"$PREFIX\" \"$NAME\"" >>"$TXN_LOG"
+	$(dirname "$0")/fpf-satisfy-deps --prefix="$PREFIX" "$NAME"
+else
+	echo "fpf: not installing the following dependencies:" >&2
+	$(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME"
+	echo "fpf: install them with \`$(dirname "$0")/fpf-satisfy-deps --prefix=\"$PREFIX\" \"$NAME\"\`" >&2
+fi
 
 # Checkout a woring copy of the package in FPF's library.  `git-status`(1)
 # and `git-diff-files`(1) are now able to verify the integrity of the package.

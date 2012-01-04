@@ -47,6 +47,14 @@ LIB="$PREFIX/lib/fpf"
 export GIT_DIR="$LIB/$NAME.git"
 export GIT_WORK_TREE="$PREFIX"
 
+if [ "$DEPS" = 1 ]
+then
+	$(dirname "$0")/fpf-rollback-deps --prefix="$PREFIX" "$NAME"
+else
+	echo "fpf: leaving the following dependencies:" >&2
+	$(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME"
+fi
+
 # Remove every file and directory installed by this package.  Don't worry
 # about directories that are not empty - these things happen when multiple
 # packages are placed on the same installation prefix.
