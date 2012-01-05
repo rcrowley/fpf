@@ -25,7 +25,7 @@ do
 		*) break;;
 	esac
 done
-NAME="$1"
+NAME="$1" shift || usage 1
 [ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
 # It's critical that the prefix be fully-qualified or Git will lose track
@@ -51,7 +51,7 @@ COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
 fpf_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
 do
-	L_MODE="$(echo -n "$MODE" | tail -c"4")"
+	L_MODE="$(printf "$MODE" | tail -c"4")"
 	P_MODE="$(fpf_mode "$PREFIX/$PATHNAME" 2>"/dev/null" || true)"
 	if [ -z "$P_MODE" ]
 	then

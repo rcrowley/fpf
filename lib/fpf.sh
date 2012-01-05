@@ -100,13 +100,12 @@ fpf_rpm_version() {
 # See also: <http://fedoraproject.org/wiki/Tools/RPM/VersionComparison>
 fpf_rpmvercmp() {
 	case "$2" in
-		">=") test "$(echo "$1\n$3" | fpf_rpmvercmp_sort | head -n1)" = "$1";;
-		"==")
-			test "$(
-				echo "$1" | _fpf_rpmvercmp_sed
-			)" = "$(
-				echo "$3" | _fpf_rpmvercmp_sed
-			)";;
+		">=") [ "$(echo "$1\n$3" | fpf_rpmvercmp_sort | head -n"1")" = "$1" ];;
+		"==") [ "$(
+			echo "$1" | _fpf_rpmvercmp_sed
+		)" = "$(
+			echo "$3" | _fpf_rpmvercmp_sed
+		)" ];;
 	esac
 }
 
@@ -136,7 +135,7 @@ fpf_rpmvercmp_sed() {
 fpf_rpmvercmp_sort() {
 	while read LINE
 	do
-		echo -n "$LINE "
+		printf "$LINE "
 		echo "$LINE" | fpf_rpmvercmp_sed
 	done |
 	sort -r -k"2" |

@@ -31,7 +31,7 @@ do
 		*) break;;
 	esac
 done
-PACKAGE="$1"
+PACKAGE="$1" shift || usage 1
 [ -z "$PREFIX" -o -z "$PACKAGE" ] && usage 1
 
 # It's critical that the prefix be fully-qualified or Git will lose track
@@ -93,7 +93,7 @@ COMMIT="$(git rev-parse "HEAD")"
 TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n"1")"
 fpf_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
 do
-	MODE="$(echo -n "$MODE" | tail -c"4")"
+	MODE="$(printf "$MODE" | tail -c"4")"
 	case "$TYPE" in
 		"blob")
 			[ -f "$PREFIX/$PATHNAME" ] &&
