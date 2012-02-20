@@ -6,6 +6,28 @@ fpf_arch() {
 	rpm --eval "%_arch" 2>"/dev/null"
 }
 
+# `fpf_dep "$MANAGER" "$ARG"`
+#
+# Parse a command-line dependency declaration and write a `git-config`(1)
+# command to add it to the package to standard output.
+#
+# The format expected for the argument is `"$PACKAGE>=$VERSION",
+# `"$PACKAGE==$VERSION"`, or `"$PACKAGE"`.
+fpf_dep() {
+	case "$2" in
+		*">="*)
+			P="$(echo "$2" | awk -F">=" '{print $1}')"
+			V="$(echo "$2" | awk -F">=" '{print $2}')"
+			echo "git config \"$1.$P.version\" \"$V\"";;
+		*"=="*)
+			P="$(echo "$2" | awk -F"==" '{print $1}')"
+			V="$(echo "$2" | awk -F"==" '{print $2}')"
+			echo "git config \"$1.$P.version\" \"$V\""
+			echo "git config --bool \"$1.$P.pinned\" \"true\"";;
+		*) echo "git config \"$1.$2.version\" \"0\"";;
+	esac >>"$TMP/deps"
+}
+
 # `fpf_dpkg_version "$NAME"`
 #
 # Write the version of `$NAME` installed to standard output.
