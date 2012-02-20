@@ -21,7 +21,7 @@ fpf_dpkg_version() {
 #
 # This function requires `GIT_DIR` and `GIT_WORK_TREE` to be exported.
 fpf_git_commit_tree() {
-	TS="$(date -u +%s)"
+	TS="$(date -u +"%s")"
 	git hash-object --no-filters --stdin -t"commit" -w <<EOF
 tree $1
 author $(git config "user.name") <$(git config "user.email")> $TS +0000
@@ -38,14 +38,14 @@ EOF
 #
 # This function requires `GIT_DIR` to be exported.
 fpf_git_ls() {
-	git ls-tree "$1" | while read MODE TYPE SHA FILENAME
+	git ls-tree "$1" | while read M T S F
 	do
-		[ -z "$2" ] && PATHNAME="$FILENAME" || PATHNAME="$2/$FILENAME"
-		echo "$MODE" "$TYPE" "$SHA" "$PATHNAME"
-		case "$TYPE" in
+		[ -z "$2" ] && P="$F" || P="$2/$F"
+		echo "$M" "$T" "$S" "$P"
+		case "$T" in
 			"blob") ;;
-			"tree") fpf_git_ls "$SHA" "$PATHNAME";;
-			*) echo "fpf: unknown object type $TYPE" >&2 && exit 1;;
+			"tree") fpf_git_ls "$S" "$P";;
+			*) echo "fpf: unknown object type $T" >&2 && exit 1;;
 		esac
 	done
 }
@@ -81,8 +81,8 @@ fpf_git_write_tree() {
 #
 # Write `$PATHNAME`'s 4-digit octal mode to standard output.
 fpf_mode() {
-	MODE="$(stat -c"%a" "$1")"
-	[ "${#MODE}" = 3 ] && echo "0$MODE" || echo "$MODE"
+	M="$(stat -c"%a" "$1")"
+	[ "${#M}" = 3 ] && echo "0$M" || echo "$M"
 }
 
 # `fpf_rpm_version "$NAME"`
@@ -135,8 +135,8 @@ fpf_rpmvercmp_sed() {
 fpf_rpmvercmp_sort() {
 	while read LINE
 	do
-		printf "$LINE "
-		echo "$LINE" | fpf_rpmvercmp_sed
+		printf "$L "
+		echo "$L" | fpf_rpmvercmp_sed
 	done |
 	sort -r -k"2" |
 	cut -d" " -f"1"
