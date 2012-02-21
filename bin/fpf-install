@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#/ Usage: fpf-install -a<archive> [--no-deps] [--prefix=<prefix>] [-p] [-v<version>] <name>
+#/ Usage: fpf-install [-a<archive>] [--no-deps] [--prefix=<prefix>] [-p] [-v<version>] <name>
 #/   -a<archive>                     archive URI
 #/   --no-deps                       don't install dependencies
 #/   --prefix=<prefix>               installation prefix
@@ -45,10 +45,23 @@ do
 	esac
 done
 NAME="$1"
-[ -z "$ARCHIVE" -o -z "$PREFIX" -o -z "$NAME" ] && usage 1
+[ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
 TMP="$(mktemp -d)"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
+
+LIB="$PREFIX/lib/fpf"
+
+# When called without `-a`, iterate over all the archives that have been
+# added, stopping after the first one which contains the package.
+if [ -z "$ARCHIVE" ]
+then
+	while read ARCHIVE
+	do
+		"$0" -a"$ARCHIVE" "$@" && exit
+	done <"$LIB/archives.txt"
+	fpf_exit "$NAME not found in any archive"
+fi
 
 # Download the index of all packages in the archive.
 curl -o"$TMP/index.txt" -s "$ARCHIVE/index.txt" ||
@@ -60,12 +73,10 @@ fpf_exit "index.txt not found in $ARCHIVE"
 curl -o"$TMP/index.txt.gpg" -s "$ARCHIVE/index.txt.gpg" ||
 wget -O"$TMP/index.txt.gpg" -q "$ARCHIVE/index.txt.gpg" ||
 fpf_exit "index.txt.gpg not found in $ARCHIVE"
-LIB="$PREFIX/lib/fpf"
 gpg -q --keyring "$LIB/keyring.gpg" --no-default-keyring --verify "$TMP/index.txt.gpg" "$TMP/index.txt"
 
 # Select the appropriate package from the index.  This is easy if the version
 # is pinned.  Otherwise, select the newest.
-# TODO Use fpf_rpmvercmp_sort for this sort.
 if [ "$PINNED" = 1 ]
 then INDEX="$(grep "  $NAME/$VERSION/" "$TMP/index.txt")"
 else
