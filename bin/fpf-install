@@ -30,9 +30,9 @@ do
 	case "$1" in
 		-a|--archive) ARCHIVE="$2" shift 2;;
 		-a*) ARCHIVE="$(echo "$1" | cut -c"3-")" shift;;
+		--archive=*) ARCHIVE="$(echo "$1" | cut -c"11-")" shift;;
 		--deps) DEPS=1 shift;;
 		--no-deps) DEPS=0 shift;;
-		--archive=*) ARCHIVE="$(echo "$1" | cut -c"11-")" shift;;
 		--prefix) PREFIX="$2" shift 2;;
 		--prefix=*) PREFIX="$(echo "$1" | cut -c"10-")" shift;;
 		-p|--pin|--pinned) PINNED=1 shift;;
@@ -49,12 +49,20 @@ NAME="$1"
 
 # When called without `-a`, iterate over all the archives that have been
 # added, stopping after the first one which contains the package.
+# TODO Differentiate between a failed installation and package-not-found.
 if [ -z "$ARCHIVE" ]
 then
 	while read ARCHIVE
 	do
-		"$0" -a"$ARCHIVE" "$@" && exit
-	done <"$LIB/archives.txt"
+		"$0" \
+			-a"$ARCHIVE" \
+			"--$([ "$DEPS" = 1 ] || echo "no-")deps" \
+			--prefix="$PREFIX" \
+			$([ "$PINNED" = 1 ] && echo "-p") \
+			$([ "$VERSION" ] && echo -v"$VERSION") \
+			"$NAME" &&
+		exit
+	done <"$PREFIX/lib/fpf/archives.txt"
 	fpf_exit "$NAME not found in any archive"
 fi
 
