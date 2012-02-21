@@ -108,6 +108,7 @@ TODO
 * Decide how to allow RubyGems and `pip` to run as a normal user.
   * Support for Bundler and Virtualenv are also desirable.
 * Give two shits (one shit each) about PEAR/PECL.
+* Remove GPG public keys when they're no longer referenced by any archives.
 
 TODONE
 ------
@@ -116,7 +117,7 @@ TODONE
 * Install packages.
 * Check package integrity.
 * Install dependencies.
-* Verifiy that dependencies are satisfied after installing the latest version.
+* Verify that a dependency is indeed satisfied after blindly installing the latest version from upstream.
 
 Related material
 ----------------

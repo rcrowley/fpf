@@ -32,7 +32,7 @@ done
 ARCHIVE="$1"
 [ -z "$PREFIX" -o -z "$ARCHIVE" ] && usage 1
 
-# Save a reference to the archive URL.
+# Save a reference to the archive URI.
 mkdir -p "$PREFIX/lib/fpf"
 grep "$ARCHIVE" "$PREFIX/lib/fpf/archives.txt" >"/dev/null" 2>"/dev/null" ||
 echo "$ARCHIVE" >>"$PREFIX/lib/fpf/archives.txt"

@@ -1,0 +1,39 @@
+#!/bin/sh
+
+#/ Usage: fpf-remove-archive [--prefix=<prefix>] <archive>
+#/   --prefix=<prefix> installation prefix
+#/   <archive>         archive URI
+
+set -e
+
+. "$(dirname "$(dirname "$0")")/lib/fpf.sh"
+
+# The default prefix is the one in which the FPF tools are installed.
+PREFIX="$(dirname "$(dirname "$0")")"
+
+usage() {
+	grep "^#/" "$0" | cut -c"4-" >&2
+	exit "$1"
+}
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		-k|--keyring) KEYRING="$2" shift 2;;
+		-k*) KEYRING="$(echo "$1" | cut -c"3-")" shift;;
+		--keyring=*) KEYRING="$(echo "$1" | cut -c"11-")" shift;;
+		--prefix) PREFIX="$2" shift 2;;
+		--prefix=*) PREFIX="$(echo "$1" | cut -c"10-")" shift;;
+		-h|--help) usage 0;;
+		-*) usage 1;;
+		*) break;;
+	esac
+done
+ARCHIVE="$1"
+[ -z "$PREFIX" -o -z "$ARCHIVE" ] && usage 1
+
+# Remove this archive URI from the list.
+mkdir -p "$PREFIX/lib/fpf"
+TMP="$(mktemp --tmpdir="$PREFIX/lib/fpf")"
+trap "rm -f \"$TMP\"" EXIT INT QUIT TERM
+grep -v "^$ARCHIVE\$" "$PREFIX/lib/fpf/archives.txt" >"$TMP" || true
+mv "$TMP" "$PREFIX/lib/fpf/archives.txt"
