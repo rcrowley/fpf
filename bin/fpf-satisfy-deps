@@ -68,7 +68,11 @@ do
 			"npm") (cd "$PREFIX" && npm install "$PACKAGE@$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" install "$PACKAGE-$VERSION";;
 			"pip") sudo pip install "$PACKAGE==$VERSION";;
-			"fpf") "$(dirname "$0")/fpf-install" --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+			"fpf")
+				"$(dirname "$0")/fpf-install" \
+					--prefix="$PREFIX" \
+					-p -v"$VERSION" \
+					"$PACKAGE";;
 		esac
 	else
 		case "$MANAGER" in
@@ -81,7 +85,8 @@ do
 			"npm") (cd "$PREFIX" && npm install "$PACKAGE@>=$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
 			"pip") sudo pip install "$PACKAGE";;
-			"fpf") "$(dirname "$0")/fpf-install" --prefix="$PREFIX" "$PACKAGE";;
+			"fpf")
+				"$(dirname "$0")/fpf-install" --prefix="$PREFIX" "$PACKAGE";;
 		esac
 	fi
 done

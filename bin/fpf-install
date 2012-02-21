@@ -88,7 +88,10 @@ fi
 # Verify that the version selected meets the stated version requirements.
 if [ "$VERSION" ]
 then
-	fpf_rpmvercmp "$(echo "$INDEX" | cut -d"/" -f"2")" "$([ "$PINNED" = 1 ] && echo "==" || echo ">=")" "$VERSION" ||
+	fpf_rpmvercmp \
+		"$(echo "$INDEX" | cut -d"/" -f"2")" \
+		"$([ "$PINNED" = 1 ] && echo "==" || echo ">=")" \
+		"$VERSION" ||
 	fpf_exit "can't meet version requirement $VERSION"
 fi
 
@@ -106,4 +109,7 @@ wget -O"$TMP/$NAME.fpf" -q "$ARCHIVE/$URI"
 fpf_exit "downloaded package SHA1 sum doesn't match $SHA"
 
 # Unpack the package in the installation prefix.
-"$(dirname "$0")/fpf-unpack" "--$([ "$DEPS" = 1 ] || echo "no-")deps" --prefix="$PREFIX" "$TMP/$NAME.fpf"
+"$(dirname "$0")/fpf-unpack" \
+	"--$([ "$DEPS" = 1 ] || echo "no-")deps" \
+	--prefix="$PREFIX" \
+	"$TMP/$NAME.fpf"

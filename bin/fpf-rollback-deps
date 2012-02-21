@@ -64,7 +64,10 @@ do
 			"pip") sudo pip install "$PACKAGE==$ROLLBACK_VERSION";;
 			"fpf")
 				"$(dirname "$0")/fpf-remove" --prefix="$PREFIX" "$PACKAGE"
-				"$(dirname "$0")/fpf-install" --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+				"$(dirname "$0")/fpf-install" \
+					--prefix="$PREFIX" \
+					-p -v"$VERSION" \
+					"$PACKAGE";;
 		esac
 	else
 		case "$MANAGER" in
