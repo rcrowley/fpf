@@ -1,0 +1,35 @@
+fpf-remove(1) -- remove an installed FPF package
+================================================
+
+SYNOPSIS
+--------
+
+`fpf-remove` [`--deps`] [`--prefix`=_prefix_] _name_
+
+DESCRIPTION
+-----------
+
+`fpf-remove` removes the installed files and metadata for _name_ from _prefix_.
+
+By default, `fpf-remove` does not invoke `fpf-rollback-deps`(1).  This behavior can be enabled with `--deps`.
+
+OPTIONS
+-------
+
+* `--deps`:
+  Remove dependencies.
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

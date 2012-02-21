@@ -1,13 +1,13 @@
 #!/bin/sh
 
-#/ Usage: fpf-build [-A|-a<arch>] -d<dirname>|-g<treeish> -n<name> -v<version> [--{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}=<package>[{>=,==}<version>]][...] <package>
+#/ Usage: fpf-build [-A|-a<arch>] -d<dirname>|-g<treeish> -n<name> -v<version> [--{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}=<name>[{>=,==}<version>]][...] <package>
 #/   -A          package is architecture-independent
-#/   -a<arch>    pointer size (32 or 64) on target systems
+#/   -a<arch>    target architecture (i386, amd64, etc.)
 #/   -d<dirname> directory to package
 #/   -g<treeish> tree or commit to package
 #/   -n<name>    package name
 #/   -v<version> package version number
-#/   --{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}=<package>[{>=,==}<version>]
+#/   --{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}=<name>[{>=,==}<version>]
 #/               add a dependency using the package manager in the option name
 #/               on the package in the value, optionally of a minimum (>=) or
 #/               pinned (==) version

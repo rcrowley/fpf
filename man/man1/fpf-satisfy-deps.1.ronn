@@ -1,0 +1,33 @@
+fpf-satisfy-deps(1) -- satisfy an FPF package's dependencies
+============================================================
+
+SYNOPSIS
+--------
+
+`fpf-satisfy-deps` [`--prefix`=_prefix_] _name_
+
+DESCRIPTION
+-----------
+
+`fpf-satisfy-deps` satisfies _name_'s dependencies.  It is typically invoked by `fpf-install-package`(1), typically via `fpf-install`(1).
+
+Rollback information is stored in _prefix_`/lib/fpf/`_name_`.git/config` for use by `fpf-rollback-deps`(1).
+
+OPTIONS
+-------
+
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

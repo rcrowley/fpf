@@ -1,0 +1,37 @@
+fpf-install-package(1) -- install an FPF package from a file
+============================================================
+
+SYNOPSIS
+--------
+
+`fpf-install-package` [`--no-deps`] [`--prefix`=_prefix_] _package_
+
+DESCRIPTION
+-----------
+
+`fpf-install-package` installs _package_ into prefix.  _package_ must be a file.
+
+By default, `fpf-install-package` invokes `fpf-satisfy-deps`(1).  This behavior can be disabled with `--no-deps`.
+
+`fpf-install-package` is transactional, meaning everything it does is rolled back in case of failure.
+
+OPTIONS
+-------
+
+* `--no-deps`:
+  Don't install dependencies.
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

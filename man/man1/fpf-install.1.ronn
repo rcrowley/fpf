@@ -1,0 +1,43 @@
+fpf-install(1) -- install an FPF package from an archive
+========================================================
+
+SYNOPSIS
+--------
+
+`fpf-install` [`-a`_archive_] [`--no-deps`] [`--prefix`=_prefix_] [`-p`] [`-v`_version_] _name_
+
+DESCRIPTION
+-----------
+
+`fpf-install` installs _name_ into _prefix_.  If _archive_ is given, it is the only archive that will be searched for _name_.
+
+The semantics of _version_ depend on whether `-p` is also given.  With _version_ and `-p`, exactly _version_ of _name_ is installed.  If _version_ can't be found, the installation fails and is rolled back.  With _version_ but not `-p`, at least _version_ of _name_ is installed.  In practice, this means the latest version is installed and if it isn't at least _version_, the installation fails and is rolled back.
+
+By default, `fpf-install`, via `fpf-install-package`(1), invokes `fpf-satisfy-deps`(1).  This behavior can be disabled with `--no-deps`.
+
+OPTIONS
+-------
+
+* `-a`_archive_, `--archive`=_archive_:
+  Archive URI.
+* `--no-deps`:
+  Don't install dependencies.
+* `--prefix`=_prefix_:
+  The installation prefix.
+* `-p`, `--pin`, `--pinned`:
+  Pin to exactly _version_.
+* `-v`_version_, `--version`=_version_:
+  Version number to install.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

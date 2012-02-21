@@ -1,0 +1,33 @@
+fpf-rollback-deps(1) -- rollback an FPF package's dependencies
+==============================================================
+
+SYNOPSIS
+--------
+
+`fpf-rollback-deps` [`--prefix`=_prefix_] _name_
+
+DESCRIPTION
+-----------
+
+`fpf-rollback-deps` restores _name_'s dependencies to their state before _name_ was installed.  The information used to perform the rollback is stored by `fpf-satisfy-deps`(1) in _prefix_`/lib/fpf/`_name_`.git/config`.
+
+For dependencies that weren't installed at all, `fpf-rollback-deps` simply means uninstalls those dependencies.  For those that were installed but of an unsatisfactory version, the previously-installed version is restored, sometimes by way of uninstalling and reinstalling.
+
+OPTIONS
+-------
+
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

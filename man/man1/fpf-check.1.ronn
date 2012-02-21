@@ -1,0 +1,31 @@
+fpf-check(1) -- verify the integrity of an FPF package
+======================================================
+
+SYNOPSIS
+--------
+
+`fpf-check` [`--prefix`=_prefix_] _name_
+
+DESCRIPTION
+-----------
+
+`fpf-check` verifies the integrity of _name_ as installed in _prefix_.  The access mode and content, via `git-diff-files`(1), of each file is checked and if any checks fail, the details are printed and `fpf-check` exits non-zero.
+
+OPTIONS
+-------
+
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

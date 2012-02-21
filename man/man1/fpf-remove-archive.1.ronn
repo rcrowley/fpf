@@ -1,0 +1,41 @@
+fpf-remove-archive(1) -- remove an FPF archive URI
+==================================================
+
+SYNOPSIS
+--------
+
+`fpf-remove-archive` [`--prefix`=_prefix_] _archive_
+
+DESCRIPTION
+-----------
+
+`fpf-remove-archive` removes _archive_ from the list of FPF archives to be used as sources for subsequent `fpf-install`(1) invocations.  It does not affect packages previously installed from _archive_.
+
+Any GPG public keys added along with _archive_ are not removed.  This is a known shortcoming which will be addressed.
+
+OPTIONS
+-------
+
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+FILES
+-----
+
+* _lib/fpf/archives.txt_:
+  The list of archive URIs, one per line.
+* _lib/fpf/keyring.gpg_:
+  The GPG public keyring.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

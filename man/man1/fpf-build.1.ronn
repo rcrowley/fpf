@@ -1,0 +1,52 @@
+fpf-build(1) -- build an FPF package
+====================================
+
+SYNOPSIS
+--------
+
+`fpf-build` [`-A`|`-a`_arch_] `-d`_dirname_|`-g`_treeish_ `-n`_name_ `-v`_version_ [`--{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}`=_name_[`{>=,==}`_version_]][_..._] _package_
+
+DESCRIPTION
+-----------
+
+`fpf-build` builds an FPF package from a directory tree or a Git commit.  The package will be created with the given _arch_, _name_, and _version_.  _arch_ defaults to the architecture of the system on which `fpf-build` is invoked but may be omitted to indicate the package is for all architectures with `-A`.  The package is written to _package_.
+
+Dependencies on other packages, including those managed by many other package managers, may be declared using the `--apt`, `--yum`, `--cpan`, `--gem`, `--npm`, `--pear`, `--pecl`, `--pip`, and `--fpf` options.  All of these options may be repeated to provide multiple dependencies.  The value is expected to be in one of three formats:
+
+* _name_:
+  Depend on any version of _name_.
+* _name_`>=`_version_:
+  Depend on at least _version_ of _name_.
+* _name_`==`_version_:
+  Depend on exactly _version_ of _name_.
+
+OPTIONS
+-------
+
+* `-A
+  Package is architecture-independent.
+* `-a_arch_
+  Target architecture (_i386_, _amd64_, etc.).
+* `-d_dirname_
+  Directory to package.
+* `-g_treeish_
+  Tree or commit to package.
+* `-n_name_
+  Package name.
+* `-v_version_
+  Package version number.
+* `--{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}`=_name_[`{>=,==}`_version_]
+  Add a dependency using the package manager in the option name on the package in the value, optionally of a minimum (`>=`) or pinned (`==`) version.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

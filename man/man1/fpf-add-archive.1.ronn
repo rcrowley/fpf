@@ -1,0 +1,43 @@
+fpf-add-archive(1) -- add an FPF archive URI
+============================================
+
+SYNOPSIS
+--------
+
+`fpf-add-archive` [`-k`_keyring_] [`--prefix`=_prefix_] _archive_
+
+DESCRIPTION
+-----------
+
+`fpf-add-archive` adds _archive_ to the end of the list of FPF archives to be used as sources for subsequent `fpf-install`(1) invocations.
+
+If `-k` is given, public keys in _keyring_ are added to FPF's public keyring to be used to verify archives indexes.  Otherwise, both _archive_`/keyring.gpg` and _archive_`/../keyring.gpg` are tried.  The latter is the default location for `freight`(1)-generated FPF archives.
+
+OPTIONS
+-------
+
+* `-k`_keyring_, `--keyring`=_keyring_:
+  Keyring URI (defaults to _archive_`/keyring.gpg` or _archive_`/../keyring.gpg`).
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+FILES
+-----
+
+* _lib/fpf/archives.txt_:
+  The list of archive URIs, one per line.
+* _lib/fpf/keyring.gpg_:
+  The GPG public keyring.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

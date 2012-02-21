@@ -1,0 +1,21 @@
+fpf(5) -- effing package format
+===============================
+
+SYNOPSIS
+--------
+
+DESCRIPTION
+-----------
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).

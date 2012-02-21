@@ -1,0 +1,35 @@
+fpf-ls-deps(1) -- list an FPF package's dependencies
+====================================================
+
+SYNOPSIS
+--------
+
+`fpf-ls-deps` [`--prefix`=_prefix_] _name_
+
+DESCRIPTION
+-----------
+
+`fpf-ls-deps` lists _name_'s dependencies in a human-readable and machine-parseable format.  For each dependency, a line in the following format is printed:
+
+_manager_ _name_ _version_ `pinned`
+
+The last field is empty if the dependency is not pinned to an exact _version_.
+
+OPTIONS
+-------
+
+* `--prefix`=_prefix_:
+  The installation prefix.
+
+THEME SONG
+----------
+
+AUTHOR
+------
+
+Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+--------
+
+Part of `fpf`(1).
