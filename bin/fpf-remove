@@ -43,8 +43,7 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 "$(dirname "$0")/fpf-check" --prefix="$PREFIX" "$NAME"
 
 # Export `GIT_DIR` and `GIT_WORK_TREE` for subsequent `git`(1) commands.
-LIB="$PREFIX/lib/fpf"
-export GIT_DIR="$LIB/$NAME.git"
+export GIT_DIR="$PREFIX/lib/fpf/$NAME.git"
 export GIT_WORK_TREE="$PREFIX"
 
 if [ "$DEPS" = 1 ]

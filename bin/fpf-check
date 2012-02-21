@@ -33,8 +33,7 @@ NAME="$1"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
 # Perform a quick sanity check: make sure the package is installed.
-LIB="$PREFIX/lib/fpf"
-[ ! -d "$LIB/$NAME.git" ] && fpf_exit "$NAME is not installed"
+[ ! -d "$PREFIX/lib/fpf/$NAME.git" ] && fpf_exit "$NAME is not installed"
 
 # Create a temporary file, which will be cleaned up at exit.  This file
 # collects standard output while verifying the mode of installed files.
@@ -42,7 +41,7 @@ TMP="$(mktemp)"
 trap "rm -f \"$TMP\"" EXIT INT TERM
 
 # Export `GIT_DIR` and `GIT_WORK_TREE` for subsequent `git`(1) commands.
-export GIT_DIR="$LIB/$NAME.git"
+export GIT_DIR="$PREFIX/lib/fpf/$NAME.git"
 export GIT_WORK_TREE="$PREFIX"
 
 # Verify the access mode of objects in the working copy match those in

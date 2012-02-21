@@ -41,9 +41,8 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 # Extract the package and its metadata into a temporary directory, which
 # will be cleaned up at exit.  Check that the metadata necessary for all
 # FPF packages is present using the temporary `GIT_DIR`.
-LIB="$PREFIX/lib/fpf"
-mkdir -p "$LIB"
-TMP="$(mktemp -d --tmpdir="$LIB")"
+mkdir -p "$PREFIX/lib/fpf"
+TMP="$(mktemp -d --tmpdir="$PREFIX/lib/fpf")"
 export GIT_DIR="$TMP"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
 tar xf "$PACKAGE" -C "$TMP"
@@ -57,7 +56,7 @@ VERSION="$(git config "fpf.version" || true)"
 
 # Verify that no version of this package is already installed in this prefix.
 # Export `GIT_DIR` for subsequent `git`(1) commands.
-export GIT_DIR="$LIB/$NAME.git"
+export GIT_DIR="$PREFIX/lib/fpf/$NAME.git"
 [ -d "$GIT_DIR" ] &&
 fpf_exit "$NAME $(git config "fpf.version") already installed"
 

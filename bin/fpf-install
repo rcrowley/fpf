@@ -47,11 +47,6 @@ done
 NAME="$1"
 [ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
-TMP="$(mktemp -d)"
-trap "rm -rf \"$TMP\"" EXIT INT TERM
-
-LIB="$PREFIX/lib/fpf"
-
 # When called without `-a`, iterate over all the archives that have been
 # added, stopping after the first one which contains the package.
 if [ -z "$ARCHIVE" ]
@@ -63,6 +58,10 @@ then
 	fpf_exit "$NAME not found in any archive"
 fi
 
+# Create a temporary directory, which will be cleaned up at exit.
+TMP="$(mktemp -d)"
+trap "rm -rf \"$TMP\"" EXIT INT TERM
+
 # Download the index of all packages in the archive.
 curl -o"$TMP/index.txt" -s "$ARCHIVE/index.txt" ||
 wget -O"$TMP/index.txt" -q "$ARCHIVE/index.txt" ||
@@ -73,7 +72,9 @@ fpf_exit "index.txt not found in $ARCHIVE"
 curl -o"$TMP/index.txt.gpg" -s "$ARCHIVE/index.txt.gpg" ||
 wget -O"$TMP/index.txt.gpg" -q "$ARCHIVE/index.txt.gpg" ||
 fpf_exit "index.txt.gpg not found in $ARCHIVE"
-gpg -q --keyring "$LIB/keyring.gpg" --no-default-keyring --verify "$TMP/index.txt.gpg" "$TMP/index.txt"
+gpg -q \
+	--keyring "$PREFIX/lib/fpf/keyring.gpg" --no-default-keyring \
+	--verify "$TMP/index.txt.gpg" "$TMP/index.txt"
 
 # Select the appropriate package from the index.  This is easy if the version
 # is pinned.  Otherwise, select the newest.
