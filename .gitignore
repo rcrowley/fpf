@@ -1,4 +1,5 @@
 *.fpf
+*.html
 *.swp
 rootfs
 test
