@@ -40,7 +40,7 @@ if [ ! -d "$GIT_DIR" ]
 then echo "fpf: $NAME is not installed" >&2 && exit 1
 fi
 
-$(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME" |
+"$(dirname "$0")/fpf-ls-deps" --prefix="$PREFIX" "$NAME" |
 while read MANAGER PACKAGE VERSION PINNED
 do
 	git config "$MANAGER.$PACKAGE.rollback-version" "$(case "$MANAGER" in
@@ -70,7 +70,7 @@ do
 			"npm") (cd "$PREFIX" && npm install "$PACKAGE@$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" install "$PACKAGE-$VERSION";;
 			"pip") sudo pip install "$PACKAGE==$VERSION";;
-			"fpf") fpf-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+			"fpf") "$(dirname "$0")/fpf-install" --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
 		esac
 	else
 		case "$MANAGER" in
@@ -83,7 +83,7 @@ do
 			"npm") (cd "$PREFIX" && npm install "$PACKAGE@>=$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
 			"pip") sudo pip install "$PACKAGE";;
-			"fpf") fpf-install --prefix="$PREFIX" "$PACKAGE";;
+			"fpf") "$(dirname "$0")/fpf-install" --prefix="$PREFIX" "$PACKAGE";;
 		esac
 	fi
 done

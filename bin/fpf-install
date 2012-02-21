@@ -93,4 +93,4 @@ wget -O"$TMP/$NAME.fpf" -q "$ARCHIVE/$URI"
 echo "fpf: downloaded package SHA1 sum doesn't match $SHA" >&2 && exit 1
 
 # Unpack the package in the installation prefix.
-fpf-unpack --prefix="$PREFIX" "$TMP/$NAME.fpf"
+"$(dirname "$0")/fpf-unpack" --prefix="$PREFIX" "$TMP/$NAME.fpf"

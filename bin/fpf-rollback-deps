@@ -40,7 +40,7 @@ if [ ! -d "$GIT_DIR" ]
 then echo "fpf: $NAME is not installed" >&2 && exit 1
 fi
 
-$(dirname "$0")/fpf-ls-deps --prefix="$PREFIX" "$NAME" |
+"$(dirname "$0")/fpf-ls-deps" --prefix="$PREFIX" "$NAME" |
 tac |
 while read MANAGER PACKAGE VERSION PINNED
 do
@@ -65,8 +65,8 @@ do
 				sudo "$MANAGER" install "$PACKAGE-$ROLLBACK_VERSION";;
 			"pip") sudo pip install "$PACKAGE==$ROLLBACK_VERSION";;
 			"fpf")
-				fpf-remove --prefix="$PREFIX" "$PACKAGE"
-				fpf-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
+				"$(dirname "$0")/fpf-remove" --prefix="$PREFIX" "$PACKAGE"
+				"$(dirname "$0")/fpf-install" --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
 		esac
 	else
 		case "$MANAGER" in
@@ -77,7 +77,7 @@ do
 			"npm") ;; # TODO
 			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
 			"pip") yes y | sudo pip uninstall "$PACKAGE";;
-			"fpf") fpf-remove --prefix="$PREFIX" "$PACKAGE";;
+			"fpf") "$(dirname "$0")/fpf-remove" --prefix="$PREFIX" "$PACKAGE";;
 		esac
 	fi
 done
