@@ -1,14 +1,14 @@
 FPF: Effing Package Format
 ==========================
 
-This is a new package format.  It strives to remove considerations for problems we no longer have, simplify the package maintainer's life by doing less in better defined ways, and play nicely with other package managers.
+This is a new package format.  It strives to remove considerations for problems we no longer have, simplify the package maintainer's life by doing less in better defined ways, and play nicely with other package managers.  There's very little to the online package archive format and that's what makes it great.
 
 The plan
 --------
 
-1. FPF specification.
+1. Package file format specification.
 2. `fpf-build`, `fpf-unpack`, `fpf-check`, and `fpf-remove`.
-3. [FPA specification](https://github.com/rcrowley/fpa) and [Freight](https://github.com/rcrowley/freight) integration.
+3. Archive format specification and [Freight](https://github.com/rcrowley/freight) integration.
 4. [`fpm`](https://github.com/jordansissel/fpm) integration.
 
 Unfeatures
@@ -65,12 +65,40 @@ Package installation begins by extracting the bare Git repository into a tempora
 
 The integrity of an installed package may be verified by `git-status`(1), `git-diff-files`(1), and friends.
 
+FPF package archives should be served over HTTP.  An archive is identified by its URL, which should be a directory containing `index.txt`.  Each line of this file lists the relative pathname and SHA1 sum of a package in the same format as `sha1sum`(1): the SHA1 sum, two spaces, and the pathname.
+
+The pathnames that appear in `index.txt` contain several significant components.  They must take one of the two forms:
+
+* <code><em>name</em>/<em>version</em>/<em>filename</em>.fpf</code>
+* <code><em>name</em>/<em>version</em>/<em>arch</em>/<em>filename</em>.fpf</code>
+
+The _name_, _version_, and optional _arch_ have the same meaning as the metadata stored within the package.  The pathnames may contain other leading directories.  The format of the filename is unspecified but it's a good idea to use <code><em>name</em>-<em>version</em>.<em>arch</em>.fpf</code>.
+
+As an example, consider version `0.0.0` of the package `foo` for all architectures in the archive `http://example.com/example`.  The following are valid URLs for the package file:
+
+* `http://example.com/example/foo/0.0.0/foo-0.0.0.fpf`
+* `http://example.com/example/foo/0.0.0/whatever.fpf`
+* `http://example.com/whatever/foo/0.0.0/foo-0.0.0.fpf`
+
+The following are invalid:
+
+* `http://example.com/example/foo-0.0.0.fpf`: the package file is not in its name and version directories.
+* `http://example.com/example/foo/foo-0.0.0.fpf`: the package file is not in its version directory.
+* `http://example.com/example/foo-0.0.0/foo-0.0.0.fpf`: the package file is not in its name or version directories.
+
+Suppose `http://example.com/example/foo/0.0.0/foo-0.0.0.fpf` is the URL of the package file with SHA1 sum `0123456789012345678901234567890123456789` in the `http://example.com/example` archive.  `http://example.com/example/index.txt` must contain the following line:
+
+	0123456789012345678901234567890123456789  foo/0.0.0/foo-0.0.0.fpf
+
+The integrity of files within a package may be verified from the SHA1 sums maintained in the Git object store.  The integrity of a complete FPF package may be verified by its SHA1 sum as compared to the SHA1 sum that appears in `index.txt`.  The integrity of `index.txt` may be verified by the GPG signature in `index.txt.gpg`.  *Distribution of the GPG public key needed to verify this signature is still under consideration.*
+
 Quirks
 ------
 
 * Dependencies managed by APT, Yum, PEAR, and PECL can only be installed system-wide so these packages are installed using `sudo`(8).
 * Dependencies managed by RubyGems and `pip` are currently installed system-wide using `sudo`(8) but this should be made configurable.
 * Dependencies managed by NPM are installed in `$PREFIX/node_modules`.  This may be a horrible idea.
+* The command that turns an FPF file into a local installation is called `fpf-unpack` so as not to conflict with `fpf-install` for installing by name from package archives.
 
 TODO
 ----
@@ -78,7 +106,6 @@ TODO
 * Make dependencies that weren't already satisfied eligible for rollback.
 * Verifiy that dependencies are satisfied after installing the latest version.
 * Decide how to allow RubyGems and `pip` to run as a normal user.
-* Consult with a real Node user about `$PREFIX/lib/node_modules`.
 * Give two shits (one shit each) about PEAR/PECL.
 
 TODONE
