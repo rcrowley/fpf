@@ -1,12 +1,12 @@
 #!/bin/sh
 
 #/ Usage: fpf-install [-a<archive>] [--no-deps] [--prefix=<prefix>] [-p] [-v<version>] <name>
-#/   -a<archive>                     archive URI
-#/   --no-deps                       don't install dependencies
-#/   --prefix=<prefix>               installation prefix
-#/   -p, --pin, --pinned             pin to exactly <version>
-#/   -v<version>, --version<version> version number to install
-#/   <name>                          package name
+#/   -a<archive>         archive URI
+#/   --no-deps           don't install dependencies
+#/   --prefix=<prefix>   installation prefix
+#/   -p, --pin, --pinned pin to exactly <version>
+#/   -v<version>         version number to install
+#/   <name>              package name
 
 set -e
 
