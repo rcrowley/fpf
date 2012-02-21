@@ -52,12 +52,14 @@ trap "rm -rf \"$TMP\"" EXIT INT TERM
 
 # Download the index of all packages in the archive.
 curl -o"$TMP/index.txt" -s "$ARCHIVE/index.txt" ||
-wget -O"$TMP/index.txt" -q "$ARCHIVE/index.txt"
+wget -O"$TMP/index.txt" -q "$ARCHIVE/index.txt" ||
+fpf_exit "index.txt not found in $ARCHIVE"
 
 # Verify the integrity of the index with the GPG public keyring that
 # was downloaded earlier and saved for this moment.
 curl -o"$TMP/index.txt.gpg" -s "$ARCHIVE/index.txt.gpg" ||
-wget -O"$TMP/index.txt.gpg" -q "$ARCHIVE/index.txt.gpg"
+wget -O"$TMP/index.txt.gpg" -q "$ARCHIVE/index.txt.gpg" ||
+fpf_exit "index.txt.gpg not found in $ARCHIVE"
 LIB="$PREFIX/lib/fpf"
 gpg -q --keyring "$LIB/keyring.gpg" --no-default-keyring --verify "$TMP/index.txt.gpg" "$TMP/index.txt"
 
@@ -74,15 +76,14 @@ fi
 # Verify that the version selected meets the stated version requirements.
 if [ "$VERSION" ]
 then
-	fpf_rpmvercmp "$(echo "$INDEX" | cut -d"/" -f"2")" ">=" "$VERSION" ||
-	echo "fpf: can't meet version requirement $VERSION" >&2 && exit 1
+	fpf_rpmvercmp "$(echo "$INDEX" | cut -d"/" -f"2")" "$([ "$PINNED" = 1 ] && echo "==" || echo ">=")" "$VERSION" ||
+	fpf_exit "can't meet version requirement $VERSION"
 fi
 
 # Extract the SHA1 sum and URI of the package to install.
 SHA="$(echo "$INDEX" | cut -d" " -f"1")"
 URI="$(echo "$INDEX" | cut -d" " -f"3")"
-[ -z "$SHA" -o -z "$URI" ] &&
-echo "fpf: $NAME not found in $ARCHIVE" >&2 && exit 1
+[ -z "$SHA" -o -z "$URI" ] && fpf_exit "$NAME not found in $ARCHIVE"
 
 # Download the package itself.
 curl -o"$TMP/$NAME.fpf" -s "$ARCHIVE/$URI" ||
@@ -90,7 +91,7 @@ wget -O"$TMP/$NAME.fpf" -q "$ARCHIVE/$URI"
 
 # Verify the package's SHA1 sum, completing the security protocol.
 [ "$(sha1sum "$TMP/$NAME.fpf" | cut -d" " -f"1")" != "$SHA" ] &&
-echo "fpf: downloaded package SHA1 sum doesn't match $SHA" >&2 && exit 1
+fpf_exit "downloaded package SHA1 sum doesn't match $SHA"
 
 # Unpack the package in the installation prefix.
 "$(dirname "$0")/fpf-unpack" --prefix="$PREFIX" "$TMP/$NAME.fpf"

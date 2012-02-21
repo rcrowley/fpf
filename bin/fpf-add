@@ -55,4 +55,4 @@ else
 	wget -O"$TMP" -q "$ARCHIVE/../keyring.gpg"
 fi
 gpg -q --keyring "$LIB/keyring.gpg" --no-default-keyring --import "$TMP" ||
-echo "fpf: no keyring found - try providing the -k option" >&2
+fpf_exit "no keyring found - try providing the -k option"

@@ -49,20 +49,17 @@ trap "rm -rf \"$TMP\"" EXIT INT TERM
 tar xf "$PACKAGE" -C "$TMP"
 ARCH="$(git config "fpf.arch" || true)"
 [ "$ARCH" -a "$ARCH" != "$(fpf_arch)" ] &&
-echo "fpf: $PACKAGE is for $ARCH, not $(fpf_arch)" >&2 && exit 1
+fpf_exit "$PACKAGE is for $ARCH, not $(fpf_arch)"
 NAME="$(git config "fpf.name" || true)"
-[ -z "$NAME" ] && echo "fpf: $PACKAGE has no name" >&2 && exit 1
+[ -z "$NAME" ] && fpf_exit "$PACKAGE has no name"
 VERSION="$(git config "fpf.version" || true)"
-[ -z "$VERSION" ] && echo "fpf: $PACKAGE has no version" >&2 && exit 1
+[ -z "$VERSION" ] && fpf_exit "$PACKAGE has no version"
 
 # Verify that no version of this package is already installed in this prefix.
 # Export `GIT_DIR` for subsequent `git`(1) commands.
 export GIT_DIR="$LIB/$NAME.git"
-if [ -d "$GIT_DIR" ]
-then
-	INST_VERSION="$(git config "fpf.version")"
-	echo "fpf: $NAME $INST_VERSION already installed" >&2 && exit 1
-fi
+[ -d "$GIT_DIR" ] &&
+fpf_exit "$NAME $(git config "fpf.version") already installed"
 
 # Now that the name of the package is known, move it into the appropriate
 # place in FPF's library directory.
@@ -97,7 +94,7 @@ do
 	case "$TYPE" in
 		"blob")
 			[ -f "$PREFIX/$PATHNAME" ] &&
-			echo "fpf: $PREFIX/$PATHNAME already installed" >&2 && exit 1
+			fpf_exit "$PREFIX/$PATHNAME already installed"
 			git cat-file "blob" "$SHA" >"$PREFIX/$PATHNAME"
 			chmod "$MODE" "$PREFIX/$PATHNAME"
 			echo "rm \"$PREFIX/$PATHNAME\"" >&3;;

@@ -36,9 +36,7 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 # dependencies only requires metadata, it doesn't actually need to be fully
 # installed.  Export `GIT_DIR` for subsequent `git`(1) commands.
 export GIT_DIR="$PREFIX/lib/fpf/$NAME.git"
-if [ ! -d "$GIT_DIR" ]
-then echo "fpf: $NAME is not installed" >&2 && exit 1
-fi
+[ ! -d "$GIT_DIR" ] && fpf_exit "$NAME is not installed"
 
 "$(dirname "$0")/fpf-ls-deps" --prefix="$PREFIX" "$NAME" |
 tac |

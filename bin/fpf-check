@@ -34,7 +34,7 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 
 # Perform a quick sanity check: make sure the package is installed.
 LIB="$PREFIX/lib/fpf"
-[ ! -d "$LIB/$NAME.git" ] && echo "fpf: $NAME is not installed" >&2 && exit 1
+[ ! -d "$LIB/$NAME.git" ] && fpf_exit "$NAME is not installed"
 
 # Create a temporary file, which will be cleaned up at exit.  This file
 # collects standard output while verifying the mode of installed files.

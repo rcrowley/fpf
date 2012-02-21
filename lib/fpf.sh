@@ -35,6 +35,14 @@ fpf_dpkg_version() {
 	dpkg-query -W -f'${Version}' "$1" 2>"/dev/null" || true
 }
 
+# `fpf_exit "$*"`
+#
+# Write a log message and exit with a non-zero exit status.
+fpf_exit() {
+	echo "fpf: $*" >&2
+	exit 1
+}
+
 # `fpf_git_commit_tree "$TREE"`
 #
 # Record a new commit referencing `$TREE` using the currently configured

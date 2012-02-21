@@ -36,9 +36,7 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 # dependencies only requires metadata, it doesn't actually need to be fully
 # installed.  Export `GIT_DIR` for subsequent `git`(1) commands.
 export GIT_DIR="$PREFIX/lib/fpf/$NAME.git"
-if [ ! -d "$GIT_DIR" ]
-then echo "fpf: $NAME is not installed" >&2 && exit 1
-fi
+[ ! -d "$GIT_DIR" ] && fpf_exit "$NAME is not installed"
 
 "$(dirname "$0")/fpf-ls-deps" --prefix="$PREFIX" "$NAME" |
 while read MANAGER PACKAGE VERSION PINNED
@@ -46,7 +44,7 @@ do
 	git config "$MANAGER.$PACKAGE.rollback-version" "$(case "$MANAGER" in
 		"apt") fpf_dpkg_version "$PACKAGE";;
 		"yum") fpf_rpm_version "$PACKAGE";;
-		"cpan") echo "fpf: CPAN has no idea what version is installed" >&2;;
+		"cpan") echo "fpf: CPAN has no idea what version of $PACKAGE is installed" >&2;;
 		"gem") sudo gem list "$PACKAGE" | awk -F"[(),]" '{print $2}';;
 		"npm") npm ls | grep "^└── $PACKAGE@" | cut -d"@" -f"2";;
 		"pear"|"pecl")
@@ -62,7 +60,7 @@ do
 			"apt") sudo apt-get -y install "$PACKAGE=$VERSION";;
 			"yum") sudo yum -y install "$PACKAGE-$VERSION";;
 			"cpan")
-				echo "fpf: CPAN can only install the latest version" >&2
+				echo "fpf: CPAN can only install the latest version of $PACKAGE" >&2
 				cpan install "$PACKAGE";;
 			"gem")
 				gem list -i -q -v"$VERSION" "$PACKAGE" >"/dev/null" ||
