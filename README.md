@@ -9,7 +9,8 @@ The plan
 1. Package file format specification.
 2. `fpf-build`, `fpf-unpack`, `fpf-check`, and `fpf-remove`.
 3. Archive format specification and [Freight](https://github.com/rcrowley/freight) integration.
-4. [`fpm`](https://github.com/jordansissel/fpm) integration.
+4. `fpf-install`, `fpf-add-archive`, and `fpf-remove-archive`.
+5. [`fpm`](https://github.com/jordansissel/fpm) integration.
 
 Unfeatures
 ----------
@@ -27,7 +28,7 @@ Design
 
 An FPF package is a `tar`(5) archive of a bare Git repository.  The repository `HEAD` points to a default branch named the same as the package itself.  That branch contains one commit, made by the package maintainer.  That commit's tree contains all the files in the package, relative to the installation prefix, which is unknown to the package maintainer.
 
-Package metadata is stored via `git-config`(1) in the `fpf` section.  The following metadata are allowed:
+Package metadata is stored via `git-config`(1) in the `fpf` section.  The following metadata are defined:
 
 * `fpf.arch`: target architecture (`amd64`, `x86_64`, `i386`, etc.).  If not present, the package targets all systems.
 * `fpf.name`: package name.
@@ -55,7 +56,7 @@ The following package managers are supported; they should be examined in this or
 
 The values of the `git-config`(1) names `apt.foo.version` and `fpf.bar.version` above specify a version number in the format expected by the associated package manager.  Because `fpf.bar.pinned` is `true`, FPF insists this exact version number be present to satisfy the dependency.
 
-Files and directories in an FPF package may have any access mode, including being `setuid`, `setgid`, `sticky`.  The complete access mode is stored in the Git tree objects in the package and the mode is restored when the package is installed.  Full use of the access mode means that `git-write-tree` and `git-checkout` can't be used directly on the package.
+Files and directories in an FPF package may have any access mode, including being `setuid`, `setgid`, or `sticky`.  The complete access mode is stored in the Git tree objects in the package and the mode is restored when the package is installed.  Full use of the access mode means that `git-write-tree` and `git-checkout` can't be used directly on the package.
 
 Files and directories are owned by the effective user and group of the `fpf-unpack` process that installed the package.  This is the least satisfying aspect of the package format: packages containing files that require mixed ownership are out of luck.  On the other hand, the most frequent pattern that calls for mixed ownership is that of `root` owning programs and libraries and a normal user owning data, which should not be a part of a package, anyway.
 
@@ -65,7 +66,7 @@ Package installation begins by extracting the bare Git repository into a tempora
 
 The integrity of an installed package may be verified by `git-status`(1), `git-diff-files`(1), and friends.
 
-FPF package archives should be served over HTTP.  An archive is identified by its URL, which should be a directory containing `index.txt`.  Each line of this file lists the relative pathname and SHA1 sum of a package in the same format as `sha1sum`(1): the SHA1 sum, two spaces, and the pathname.
+FPF package archives should be served over HTTP.  An archive is identified by its URL, which should be a directory containing `index.txt`.  Each line of this file lists the pathname (relative to the archive) and SHA1 sum of a package in the same format as `sha1sum`(1): the SHA1 sum, two spaces, and the pathname.
 
 The pathnames that appear in `index.txt` contain several significant components.  They must take one of the two forms:
 
@@ -90,7 +91,9 @@ Suppose `http://example.com/example/foo/0.0.0/foo-0.0.0.fpf` is the URL of the p
 
 	0123456789012345678901234567890123456789  foo/0.0.0/foo-0.0.0.fpf
 
-The integrity of files within a package may be verified from the SHA1 sums maintained in the Git object store.  The integrity of a complete FPF package may be verified by its SHA1 sum as compared to the SHA1 sum that appears in `index.txt`.  The integrity of `index.txt` may be verified by the GPG signature in `index.txt.gpg`.  *Distribution of the GPG public key needed to verify this signature is still under consideration.*
+The integrity of files within a package may be verified from the SHA1 sums maintained in the Git object store.  The integrity of a complete FPF package may be verified by its SHA1 sum as compared to the SHA1 sum that appears in `index.txt`.  The integrity of `index.txt` may be verified by the GPG signature in `index.txt.gpg`.
+
+The GPG public keys necessary to perform this verification must be distributed ahead-of-time and are expected in the <code><em>prefix</em>/lib/fpf/keyring.gpg</code> keyring.
 
 Quirks
 ------
@@ -103,9 +106,8 @@ Quirks
 TODO
 ----
 
-* Make dependencies that weren't already satisfied eligible for rollback.
-* Verifiy that dependencies are satisfied after installing the latest version.
 * Decide how to allow RubyGems and `pip` to run as a normal user.
+  * Support for Bundler and Virtualenv are also desirable.
 * Give two shits (one shit each) about PEAR/PECL.
 
 TODONE
@@ -115,6 +117,7 @@ TODONE
 * Install packages.
 * Check package integrity.
 * Install dependencies.
+* Verifiy that dependencies are satisfied after installing the latest version.
 
 Related material
 ----------------
