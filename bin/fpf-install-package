@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#/ Usage: fpf-unpack [--no-deps] [--prefix=<prefix>] <package>
+#/ Usage: fpf-install-package [--no-deps] [--prefix=<prefix>] <package>
 #/   --no-deps         don't install dependencies
 #/   --prefix=<prefix> installation prefix
 #/   <package>         package pathname
