@@ -34,6 +34,6 @@ ARCHIVE="$1"
 # Remove this archive URI from the list.
 mkdir -p "$PREFIX/lib/fpf"
 TMP="$(mktemp --tmpdir="$PREFIX/lib/fpf")"
-trap "rm -f \"$TMP\"" EXIT INT QUIT TERM
+trap "rm -f \"$TMP\"" EXIT INT TERM
 grep -v "^$ARCHIVE\$" "$PREFIX/lib/fpf/archives.txt" >"$TMP" || true
 mv "$TMP" "$PREFIX/lib/fpf/archives.txt"
