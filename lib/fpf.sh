@@ -155,7 +155,7 @@ fpf_rpmvercmp_sed() {
 # Sort the stream of RPM-style version numbers on standard input, writing
 # the results to standard output.
 fpf_rpmvercmp_sort() {
-	while read LINE
+	while read L
 	do
 		printf "$L "
 		echo "$L" | fpf_rpmvercmp_sed
