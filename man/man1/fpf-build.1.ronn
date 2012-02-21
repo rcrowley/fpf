@@ -23,19 +23,19 @@ Dependencies on other packages, including those managed by many other package ma
 OPTIONS
 -------
 
-* `-A
+* `-A`:
   Package is architecture-independent.
-* `-a_arch_
-  Target architecture (_i386_, _amd64_, etc.).
-* `-d_dirname_
+* `-a`_arch_:
+  Target architecture (_i386_, _amd64_, etc.) (defaults to the system architecture).
+* `-d`_dirname_:
   Directory to package.
-* `-g_treeish_
+* `-g`_treeish_:
   Tree or commit to package.
-* `-n_name_
+* `-n`_name_:
   Package name.
-* `-v_version_
+* `-v`_version_:
   Package version number.
-* `--{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}`=_name_[`{>=,==}`_version_]
+* `--{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}`=_name_[`{>=,==}`_version_]:
   Add a dependency using the package manager in the option name on the package in the value, optionally of a minimum (`>=`) or pinned (`==`) version.
 
 THEME SONG

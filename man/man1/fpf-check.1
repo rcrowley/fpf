@@ -1,0 +1,27 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-CHECK" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-check\fR \- verify the integrity of an FPF package
+.
+.SH "SYNOPSIS"
+\fBfpf\-check\fR [\fB\-\-prefix\fR=\fIprefix\fR] \fIname\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-check\fR verifies the integrity of \fIname\fR as installed in \fIprefix\fR\. The access mode and content, via \fBgit\-diff\-files\fR(1), of each file is checked and if any checks fail, the details are printed and \fBfpf\-check\fR exits non\-zero\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-\-prefix\fR=\fIprefix\fR
+The installation prefix\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.

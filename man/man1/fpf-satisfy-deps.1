@@ -1,0 +1,30 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-SATISFY\-DEPS" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-satisfy\-deps\fR \- satisfy an FPF package\'s dependencies
+.
+.SH "SYNOPSIS"
+\fBfpf\-satisfy\-deps\fR [\fB\-\-prefix\fR=\fIprefix\fR] \fIname\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-satisfy\-deps\fR satisfies \fIname\fR\'s dependencies\. It is typically invoked by \fBfpf\-install\-package\fR(1), typically via \fBfpf\-install\fR(1)\.
+.
+.P
+Rollback information is stored in \fIprefix\fR\fB/lib/fpf/\fR\fIname\fR\fB\.git/config\fR for use by \fBfpf\-rollback\-deps\fR(1)\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-\-prefix\fR=\fIprefix\fR
+The installation prefix\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.

@@ -1,0 +1,44 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-ADD\-ARCHIVE" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-add\-archive\fR \- add an FPF archive URI
+.
+.SH "SYNOPSIS"
+\fBfpf\-add\-archive\fR [\fB\-k\fR\fIkeyring\fR] [\fB\-\-prefix\fR=\fIprefix\fR] \fIarchive\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-add\-archive\fR adds \fIarchive\fR to the end of the list of FPF archives to be used as sources for subsequent \fBfpf\-install\fR(1) invocations\.
+.
+.P
+If \fB\-k\fR is given, public keys in \fIkeyring\fR are added to FPF\'s public keyring to be used to verify archives indexes\. Otherwise, both \fIarchive\fR\fB/keyring\.gpg\fR and \fIarchive\fR\fB/\.\./keyring\.gpg\fR are tried\. The latter is the default location for \fBfreight\fR(1)\-generated FPF archives\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-k\fR\fIkeyring\fR, \fB\-\-keyring\fR=\fIkeyring\fR
+Keyring URI (defaults to \fIarchive\fR\fB/keyring\.gpg\fR or \fIarchive\fR\fB/\.\./keyring\.gpg\fR)\.
+.
+.TP
+\fB\-\-prefix\fR=\fIprefix\fR
+The installation prefix\.
+.
+.SH "FILES"
+.
+.TP
+\fIlib/fpf/archives\.txt\fR
+The list of archive URIs, one per line\.
+.
+.TP
+\fIlib/fpf/keyring\.gpg\fR
+The GPG public keyring\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.

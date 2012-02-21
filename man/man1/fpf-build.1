@@ -1,0 +1,66 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-BUILD" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-build\fR \- build an FPF package
+.
+.SH "SYNOPSIS"
+\fBfpf\-build\fR [\fB\-A\fR|\fB\-a\fR\fIarch\fR] \fB\-d\fR\fIdirname\fR|\fB\-g\fR\fItreeish\fR \fB\-n\fR\fIname\fR \fB\-v\fR\fIversion\fR [\fB\-\-{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}\fR=\fIname\fR[\fB{>=,==}\fR\fIversion\fR]][\fI\|\.\|\.\|\.\fR] \fIpackage\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-build\fR builds an FPF package from a directory tree or a Git commit\. The package will be created with the given \fIarch\fR, \fIname\fR, and \fIversion\fR\. \fIarch\fR defaults to the architecture of the system on which \fBfpf\-build\fR is invoked but may be omitted to indicate the package is for all architectures with \fB\-A\fR\. The package is written to \fIpackage\fR\.
+.
+.P
+Dependencies on other packages, including those managed by many other package managers, may be declared using the \fB\-\-apt\fR, \fB\-\-yum\fR, \fB\-\-cpan\fR, \fB\-\-gem\fR, \fB\-\-npm\fR, \fB\-\-pear\fR, \fB\-\-pecl\fR, \fB\-\-pip\fR, and \fB\-\-fpf\fR options\. All of these options may be repeated to provide multiple dependencies\. The value is expected to be in one of three formats:
+.
+.TP
+\fIname\fR
+Depend on any version of \fIname\fR\.
+.
+.TP
+\fIname\fR\fB>=\fR\fIversion\fR
+Depend on at least \fIversion\fR of \fIname\fR\.
+.
+.TP
+\fIname\fR\fB==\fR\fIversion\fR
+Depend on exactly \fIversion\fR of \fIname\fR\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-A\fR
+Package is architecture\-independent\.
+.
+.TP
+\fB\-a\fR\fIarch\fR
+Target architecture (\fIi386\fR, \fIamd64\fR, etc\.) (defaults to the system architecture)\.
+.
+.TP
+\fB\-d\fR\fIdirname\fR
+Directory to package\.
+.
+.TP
+\fB\-g\fR\fItreeish\fR
+Tree or commit to package\.
+.
+.TP
+\fB\-n\fR\fIname\fR
+Package name\.
+.
+.TP
+\fB\-v\fR\fIversion\fR
+Package version number\.
+.
+.TP
+\fB\-\-{apt,yum,cpan,gem,npm,pear,pecl,pip,fpf}\fR=\fIname\fR[\fB{>=,==}\fR\fIversion\fR]
+Add a dependency using the package manager in the option name on the package in the value, optionally of a minimum (\fB>=\fR) or pinned (\fB==\fR) version\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.

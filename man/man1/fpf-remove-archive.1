@@ -1,0 +1,40 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-REMOVE\-ARCHIVE" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-remove\-archive\fR \- remove an FPF archive URI
+.
+.SH "SYNOPSIS"
+\fBfpf\-remove\-archive\fR [\fB\-\-prefix\fR=\fIprefix\fR] \fIarchive\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-remove\-archive\fR removes \fIarchive\fR from the list of FPF archives to be used as sources for subsequent \fBfpf\-install\fR(1) invocations\. It does not affect packages previously installed from \fIarchive\fR\.
+.
+.P
+Any GPG public keys added along with \fIarchive\fR are not removed\. This is a known shortcoming which will be addressed\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-\-prefix\fR=\fIprefix\fR
+The installation prefix\.
+.
+.SH "FILES"
+.
+.TP
+\fIlib/fpf/archives\.txt\fR
+The list of archive URIs, one per line\.
+.
+.TP
+\fIlib/fpf/keyring\.gpg\fR
+The GPG public keyring\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.

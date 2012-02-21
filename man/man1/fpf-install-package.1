@@ -1,0 +1,37 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-INSTALL\-PACKAGE" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-install\-package\fR \- install an FPF package from a file
+.
+.SH "SYNOPSIS"
+\fBfpf\-install\-package\fR [\fB\-\-no\-deps\fR] [\fB\-\-prefix\fR=\fIprefix\fR] \fIpackage\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-install\-package\fR installs \fIpackage\fR into prefix\. \fIpackage\fR must be a file\.
+.
+.P
+By default, \fBfpf\-install\-package\fR invokes \fBfpf\-satisfy\-deps\fR(1)\. This behavior can be disabled with \fB\-\-no\-deps\fR\.
+.
+.P
+\fBfpf\-install\-package\fR is transactional, meaning everything it does is rolled back in case of failure\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-\-no\-deps\fR
+Don\'t install dependencies\.
+.
+.TP
+\fB\-\-prefix\fR=\fIprefix\fR
+The installation prefix\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.

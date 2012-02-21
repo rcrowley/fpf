@@ -1,0 +1,49 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FPF\-INSTALL" "1" "February 2012" "" "FPF"
+.
+.SH "NAME"
+\fBfpf\-install\fR \- install an FPF package from an archive
+.
+.SH "SYNOPSIS"
+\fBfpf\-install\fR [\fB\-a\fR\fIarchive\fR] [\fB\-\-no\-deps\fR] [\fB\-\-prefix\fR=\fIprefix\fR] [\fB\-p\fR] [\fB\-v\fR\fIversion\fR] \fIname\fR
+.
+.SH "DESCRIPTION"
+\fBfpf\-install\fR installs \fIname\fR into \fIprefix\fR\. If \fIarchive\fR is given, it is the only archive that will be searched for \fIname\fR\.
+.
+.P
+The semantics of \fIversion\fR depend on whether \fB\-p\fR is also given\. With \fIversion\fR and \fB\-p\fR, exactly \fIversion\fR of \fIname\fR is installed\. If \fIversion\fR can\'t be found, the installation fails and is rolled back\. With \fIversion\fR but not \fB\-p\fR, at least \fIversion\fR of \fIname\fR is installed\. In practice, this means the latest version is installed and if it isn\'t at least \fIversion\fR, the installation fails and is rolled back\.
+.
+.P
+By default, \fBfpf\-install\fR, via \fBfpf\-install\-package\fR(1), invokes \fBfpf\-satisfy\-deps\fR(1)\. This behavior can be disabled with \fB\-\-no\-deps\fR\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-a\fR\fIarchive\fR, \fB\-\-archive\fR=\fIarchive\fR
+Archive URI\.
+.
+.TP
+\fB\-\-no\-deps\fR
+Don\'t install dependencies\.
+.
+.TP
+\fB\-\-prefix\fR=\fIprefix\fR
+The installation prefix\.
+.
+.TP
+\fB\-p\fR, \fB\-\-pin\fR, \fB\-\-pinned\fR
+Pin to exactly \fIversion\fR\.
+.
+.TP
+\fB\-v\fR\fIversion\fR, \fB\-\-version\fR=\fIversion\fR
+Version number to install\.
+.
+.SH "THEME SONG"
+.
+.SH "AUTHOR"
+Richard Crowley \fIr@rcrowley\.org\fR
+.
+.SH "SEE ALSO"
+Part of \fBfpf\fR(1)\.
