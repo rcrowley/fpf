@@ -28,7 +28,7 @@ do
 		*) break;;
 	esac
 done
-ARCHIVE="$1" shift || usage 1
+ARCHIVE="$1"
 [ -z "$PREFIX" -o -z "$ARCHIVE" ] && usage 1
 [ -z "$KEYRING" ] && KEYRING="$ARCHIVE/keyring.gpg"
 

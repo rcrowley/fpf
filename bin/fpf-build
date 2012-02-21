@@ -59,8 +59,8 @@ do
 		*) break;;
 	esac
 done
-PACKAGE="$1" shift || usage 1
-[ -z "$DIRNAME" -a -z "$TREEISH" -o -n "$DIRNAME" -a -n "$TREEISH" ] && usage 1
+PACKAGE="$1"
+[ -z "$DIRNAME" -a -z "$TREEISH" -o "$DIRNAME" -a "$TREEISH" ] && usage 1
 [ -z "$NAME" -o -z "$VERSION" -o -z "$PACKAGE" ] && usage 1
 
 # If the files being packaged are coming from a Git repository, translate

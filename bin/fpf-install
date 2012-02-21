@@ -44,7 +44,7 @@ do
 		*) break;;
 	esac
 done
-NAME="$1" shift || usage 1
+NAME="$1"
 [ -z "$ARCHIVE" -o -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
 TMP="$(mktemp -d)"

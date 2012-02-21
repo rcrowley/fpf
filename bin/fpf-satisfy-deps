@@ -25,7 +25,7 @@ do
 		*) break;;
 	esac
 done
-NAME="$1" shift || usage 1
+NAME="$1"
 [ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
 # It's critical that the prefix be fully-qualified or Git will lose track

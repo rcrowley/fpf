@@ -31,7 +31,7 @@ do
 		*) break;;
 	esac
 done
-PACKAGE="$1" shift || usage 1
+PACKAGE="$1"
 [ -z "$PREFIX" -o -z "$PACKAGE" ] && usage 1
 
 # It's critical that the prefix be fully-qualified or Git will lose track
@@ -48,7 +48,7 @@ export GIT_DIR="$TMP"
 trap "rm -rf \"$TMP\"" EXIT INT TERM
 tar xf "$PACKAGE" -C "$TMP"
 ARCH="$(git config "fpf.arch" || true)"
-[ -n "$ARCH" -a "$ARCH" != "$(fpf_arch)" ] &&
+[ "$ARCH" -a "$ARCH" != "$(fpf_arch)" ] &&
 echo "fpf: $PACKAGE is for $ARCH, not $(fpf_arch)" >&2 && exit 1
 NAME="$(git config "fpf.name" || true)"
 [ -z "$NAME" ] && echo "fpf: $PACKAGE has no name" >&2 && exit 1

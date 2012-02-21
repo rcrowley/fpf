@@ -25,7 +25,7 @@ do
 		*) break;;
 	esac
 done
-NAME="$1" shift || usage 1
+NAME="$1"
 [ -z "$PREFIX" -o -z "$NAME" ] && usage 1
 
 # It's critical that the prefix be fully-qualified or Git will lose track
@@ -48,7 +48,7 @@ export GIT_WORK_TREE="$PREFIX"
 # Verify the access mode of objects in the working copy match those in
 # the package.
 COMMIT="$(git rev-parse "HEAD")"
-TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n1)"
+TREE="$(git show --pretty="format:%T" "$COMMIT" | head -n"1")"
 fpf_git_ls "$TREE" | while read MODE TYPE SHA PATHNAME
 do
 	L_MODE="$(printf "$MODE" | tail -c"4")"
@@ -57,7 +57,7 @@ do
 	then
 		echo "fpf: $PREFIX/$PATHNAME is missing" >&2
 		echo 1
-	elif [ -n "$L_MODE" -a "$L_MODE" != "$P_MODE" ]
+	elif [ "$L_MODE" -a "$L_MODE" != "$P_MODE" ]
 	then
 		echo "fpf: $PREFIX/$PATHNAME mode is $P_MODE, should be $L_MODE" >&2
 		echo 1
