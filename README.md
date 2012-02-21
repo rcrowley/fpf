@@ -7,7 +7,7 @@ The plan
 --------
 
 1. FPF specification.
-2. `fpf-build`, `fpf-install`, `fpf-check`, and `fpf-remove`.
+2. `fpf-build`, `fpf-unpack`, `fpf-check`, and `fpf-remove`.
 3. [FPA specification](https://github.com/rcrowley/fpa) and [Freight](https://github.com/rcrowley/freight) integration.
 4. [`fpm`](https://github.com/jordansissel/fpm) integration.
 
@@ -57,7 +57,7 @@ The values of the `git-config`(1) names `apt.foo.version` and `fpf.bar.version` 
 
 Files and directories in an FPF package may have any access mode, including being `setuid`, `setgid`, `sticky`.  The complete access mode is stored in the Git tree objects in the package and the mode is restored when the package is installed.  Full use of the access mode means that `git-write-tree` and `git-checkout` can't be used directly on the package.
 
-Files and directories are owned by the effective user and group of the `fpf-install` process that installed the package.  This is the least satisfying aspect of the package format: packages containing files that require mixed ownership are out of luck.  On the other hand, the most frequent pattern that calls for mixed ownership is that of `root` owning programs and libraries and a normal user owning data, which should not be a part of a package, anyway.
+Files and directories are owned by the effective user and group of the `fpf-unpack` process that installed the package.  This is the least satisfying aspect of the package format: packages containing files that require mixed ownership are out of luck.  On the other hand, the most frequent pattern that calls for mixed ownership is that of `root` owning programs and libraries and a normal user owning data, which should not be a part of a package, anyway.
 
 Objects are compressed in Git repositories so compression of the outer `tar`(5) archive would reclaim little, if any, space and would hinder quickly extracting package metadata.
 
@@ -70,7 +70,7 @@ Quirks
 
 * Dependencies managed by APT, Yum, PEAR, and PECL can only be installed system-wide so these packages are installed using `sudo`(8).
 * Dependencies managed by RubyGems and `pip` are currently installed system-wide using `sudo`(8) but this should be made configurable.
-* Dependencies managed by NPM are installed in `$PREFIX/lib/node_modules`.  This may be a horrible idea.
+* Dependencies managed by NPM are installed in `$PREFIX/node_modules`.  This may be a horrible idea.
 
 TODO
 ----
