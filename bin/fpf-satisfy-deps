@@ -67,9 +67,7 @@ do
 			"gem")
 				gem list -i -q -v"$VERSION" "$PACKAGE" >"/dev/null" ||
 				sudo gem install -v"$VERSION" "$PACKAGE";;
-			"npm")
-				mkdir -p "$PREFIX/lib"
-				(cd "$PREFIX/lib" && npm install "$PACKAGE@$VERSION");;
+			"npm") (cd "$PREFIX" && npm install "$PACKAGE@$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" install "$PACKAGE-$VERSION";;
 			"pip") sudo pip install "$PACKAGE==$VERSION";;
 			"fpa") fpa-install --prefix="$PREFIX" -p -v"$VERSION" "$PACKAGE";;
@@ -82,9 +80,7 @@ do
 			"gem")
 				gem list -i -q -v">= $VERSION" "$PACKAGE" >"/dev/null" ||
 				sudo gem install -v">= $VERSION" "$PACKAGE";;
-			"npm")
-				mkdir -p "$PREFIX/lib"
-				(cd "$PREFIX/lib" && npm install "$PACKAGE@>=$VERSION");;
+			"npm") (cd "$PREFIX" && npm install "$PACKAGE@>=$VERSION");;
 			"pear"|"pecl") sudo "$MANAGER" uninstall "$PACKAGE";;
 			"pip") sudo pip install "$PACKAGE";;
 			"fpa") fpa-install --prefix="$PREFIX" "$PACKAGE";;
