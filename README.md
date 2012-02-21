@@ -52,7 +52,7 @@ The following package managers are supported; they should be examined in this or
 6. `pear`
 7. `pecl`
 8. `pip`
-9. `fpa`
+9. `fpf`
 
 The values of the `git-config`(1) names `apt.foo.version` and `fpf.bar.version` above specify a version number in the format expected by the associated package manager.  Because `fpf.bar.pinned` is `true`, FPF insists this exact version number be present to satisfy the dependency.
 
