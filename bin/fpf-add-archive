@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#/ Usage: fpf-add [-k<keyring>] [--prefix=<prefix>] <archive>
+#/ Usage: fpf-add-archive [-k<keyring>] [--prefix=<prefix>] <archive>
 #/   -k<keyring>       keyring URI (defaults to <archive>/keyring.gpg)
 #/   --prefix=<prefix> installation prefix
 #/   <archive>         archive URI
@@ -32,12 +32,10 @@ done
 ARCHIVE="$1"
 [ -z "$PREFIX" -o -z "$ARCHIVE" ] && usage 1
 
-LIB="$PREFIX/lib/fpf"
-mkdir -p "$LIB"
-
 # Save a reference to the archive URL.
-grep "$ARCHIVE" "$LIB/archives.txt" >"/dev/null" 2>"/dev/null" ||
-echo "$ARCHIVE" >>"$LIB/archives.txt"
+mkdir -p "$PREFIX/lib/fpf"
+grep "$ARCHIVE" "$PREFIX/lib/fpf/archives.txt" >"/dev/null" 2>"/dev/null" ||
+echo "$ARCHIVE" >>"$PREFIX/lib/fpf/archives.txt"
 
 # Download the GPG public keyring and save it for later.  If `-k` was given,
 # use that URI.  Otherwise, try both `keyring.gpg` in the archive directory
@@ -54,5 +52,7 @@ else
 	wget -O"$TMP" -q "$ARCHIVE/keyring.gpg" ||
 	wget -O"$TMP" -q "$ARCHIVE/../keyring.gpg"
 fi
-gpg -q --keyring "$LIB/keyring.gpg" --no-default-keyring --import "$TMP" ||
+gpg -q \
+	--keyring "$PREFIX/lib/fpf/keyring.gpg" --no-default-keyring \
+	--import "$TMP" ||
 fpf_exit "no keyring found - try providing the -k option"
