@@ -109,6 +109,7 @@ TODO
   * Support for Bundler and Virtualenv are also desirable.
 * Give two shits (one shit each) about PEAR/PECL.
 * Remove GPG public keys when they're no longer referenced by any archives.
+* Test `fpf-install` and other archive-related features and tools.
 
 TODONE
 ------
