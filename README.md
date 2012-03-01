@@ -19,9 +19,9 @@ Actions taken on behalf of a package installation, upgrade, downgrade, or remova
 
 Configuration files are likewise the responsibility of the configuration management tool because they commonly contain references to other systems (database connection credentials, downstream web servers, etc.).  Programs should assume sensible defaults in the absence of their configuration files.  Therefore: **no special handling of configuration files**.
 
-This is 2011 and we all use version control software.  Honestly, we basically all use Git.  Therefore: **no source packages**.
+This is 2012 and we all use version control software.  Honestly, we basically all use Git.  Therefore: **no source packages**.
 
-Much to my dismay, many open-source communities promote isolating their dependencies from the rest of the system (for the curious: I prefer faking entire systems with [`lxc`](http://lxc.sourceforge.net/) and [`debootstrap`](http://wiki.debian.org/Debootstrap)) and particularly installing packages as normal users.  A widely-useful package format should support these practices.  Therefore: **remain installation prefix-agnostic** and **don't require `root` privileges**.
+Much to my dismay, many open-source communities promote isolating their dependencies from the rest of the system (for the curious: I prefer faking entire systems with [`lxc`](http://lxc.sourceforge.net/) and [`debootstrap`](http://wiki.debian.org/Debootstrap)) and installing packages as normal users.  A widely-useful package format should support these practices.  Therefore: **remain installation prefix-agnostic** and **don't require `root` privileges**.
 
 Design
 ------
